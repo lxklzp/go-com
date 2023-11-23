@@ -53,7 +53,7 @@ func CsvTemplateRead(path string, comma rune) {
 	}
 }
 
-// CsvWrite csv写入
+// CsvWrite csv写入 filename格式 xxx.csv
 func CsvWrite(filename string, comma rune, data [][]string) {
 	// 创建csv文件
 	file, err := os.Create(filename)
@@ -72,7 +72,7 @@ func CsvWrite(filename string, comma rune, data [][]string) {
 	}
 }
 
-// Zip 压缩文件夹
+// Zip 压缩文件夹 dis格式 xx.zip
 func Zip(src string, dst string) {
 	var err error
 	zipFile, err := os.Create(dst)

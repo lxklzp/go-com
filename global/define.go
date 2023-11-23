@@ -24,6 +24,14 @@ const (
 	LetterBytes               = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
+const (
+	_        = iota
+	KB int64 = 1 << (10 * iota)
+	MB
+	GB
+	TB
+)
+
 var DefaultTimeMin Timestamp
 var DefaultTimeMax Timestamp
 var KafkaConsumeWorkerNumCh chan bool
