@@ -32,7 +32,7 @@ Mysql:
   Addr: 135.0.120.181:3306
   User: itestor
   Password: dDfd63n#ci2#
-  Db: alarm_center
+  Dbname: alarm_center
   # 获取数据库服务器的wait_timeout，然后设置ConnMaxLifetime比这个数值小10s左右。
   ConnMaxLifetime: 180
   MaxOpenConns: 200
@@ -44,6 +44,8 @@ Pgsql:
   User: postgres
   Password: mypass
   Dbname: alarm_center
+  MaxOpenConns: 200
+  MaxIdleConns: 10
 
 Etcd:
   Addr:

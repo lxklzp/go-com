@@ -1,6 +1,7 @@
 package global
 
 import (
+	"database/sql"
 	"fmt"
 	"go-com/config"
 	"gorm.io/driver/mysql"
@@ -11,10 +12,18 @@ import (
 	"time"
 )
 
-var Gorm *gorm.DB
+var GormMy *gorm.DB
 
-func InitGorm() {
-	var err error
+func InitGormMy() {
+	cfg := config.C.Mysql
+	Db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local", cfg.User, cfg.Password, cfg.Addr, cfg.Dbname))
+	if err != nil {
+		Log.Fatal(err)
+	}
+
+	Db.SetConnMaxLifetime(time.Second * cfg.ConnMaxLifetime)
+	Db.SetMaxOpenConns(cfg.MaxOpenConns)
+	Db.SetMaxIdleConns(cfg.MaxIdleConns)
 
 	// sql日志
 	var logLevel logger.LogLevel
@@ -34,7 +43,7 @@ func InitGorm() {
 		},
 	)
 
-	Gorm, err = gorm.Open(mysql.New(mysql.Config{
+	GormMy, err = gorm.Open(mysql.New(mysql.Config{
 		Conn: Db,
 	}), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{

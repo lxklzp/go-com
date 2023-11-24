@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
+	"unicode"
 )
 
 func init() {
@@ -65,9 +65,19 @@ func RespData(code int, message string, data interface{}) ResponseData {
 	return ResponseData{Code: code, Message: message, Data: data}
 }
 
-func ToUnderScore(field string) string {
-	reg, _ := regexp.Compile(`/([a-z])([A-Z])/`)
-	return reg.ReplaceAllString(field, `11`)
+func CamelToSepName(field string, sep rune) string {
+	var buffer []rune
+	for i, r := range []rune(field) {
+		if unicode.IsUpper(r) {
+			if i != 0 {
+				buffer = append(buffer, sep)
+			}
+			buffer = append(buffer, unicode.ToLower(r))
+		} else {
+			buffer = append(buffer, r)
+		}
+	}
+	return string(buffer)
 }
 
 func Get(url string, param map[string]string, header map[string]string) ([]byte, error) {

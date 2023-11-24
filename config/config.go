@@ -39,7 +39,7 @@ type config struct {
 	Pgsql    pgsql
 	Etcd     Etcd
 	Nebula   nebula
-	Kafka    kafka
+	Kafka    Kafka
 	Rabbitmq rabbitmq
 	Enum     enum
 }
@@ -72,18 +72,20 @@ type mysql struct {
 	Addr            string
 	User            string
 	Password        string
-	Db              string
+	Dbname          string
 	ConnMaxLifetime time.Duration
 	MaxOpenConns    int
 	MaxIdleConns    int
 }
 
 type pgsql struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Dbname   string
+	Host         string
+	Port         string
+	User         string
+	Password     string
+	Dbname       string
+	MaxOpenConns int
+	MaxIdleConns int
 }
 
 type Etcd struct {
@@ -103,7 +105,7 @@ type nebula struct {
 	Dbname   string
 }
 
-type kafka struct {
+type Kafka struct {
 	Servers          string
 	Username         string
 	Password         string

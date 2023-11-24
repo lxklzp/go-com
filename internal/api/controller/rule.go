@@ -6,36 +6,40 @@ import (
 	"go-com/internal/model"
 )
 
-var Rule rule
-
 type rule struct {
 }
 
-func (ctl *rule) ActionAddStorage(c *gin.Context) interface{} {
+func InitController() {}
+
+func init() {
+	global.AddRouterApi(rule{})
+}
+
+func (ctl rule) ActionAddStorage(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	if err = c.ShouldBindJSON(&m); err != nil {
 		return global.RespData(400, err.Error(), nil)
 	}
 
-	return global.RespData(200, "", nil)
+	return global.RespData(200, "ActionAddStorage", nil)
 }
 
-func (ctl *rule) ActionUpdStorage(c *gin.Context) interface{} {
+func (ctl rule) ActionUpdStorage(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	if err = c.ShouldBindJSON(&m); err != nil {
 		return global.RespData(400, err.Error(), nil)
 	}
 
-	return global.RespData(200, "", nil)
+	return global.RespData(200, "ActionUpdStorage", nil)
 }
 
-func (ctl *rule) ActionDelStorage(c *gin.Context) interface{} {
+func (ctl rule) ActionDelStorage(c *gin.Context) interface{} {
 	var err error
 	var param model.PrimaryId
 	if err = c.ShouldBindJSON(&param); err != nil {
 		return global.RespData(400, err.Error(), nil)
 	}
-	return global.RespData(200, "", nil)
+	return global.RespData(200, "ActionDelStorage", nil)
 }

@@ -4,11 +4,13 @@ import "C"
 import (
 	"database/sql/driver"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go-com/config"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -92,5 +94,26 @@ func (Timestamp) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 		return "TEXT"
 	default:
 		return ""
+	}
+}
+
+type RouterApi struct {
+	Path   string
+	Action func(c *gin.Context) interface{}
+}
+
+var RouterApiList []RouterApi
+
+func AddRouterApi(ctl interface{}) {
+	ty := reflect.TypeOf(ctl)
+	value := reflect.ValueOf(ctl)
+	pathCtl := CamelToSepName(ty.Name(), '-')
+	numMethod := ty.NumMethod()
+	for i := 0; i < numMethod; i++ {
+		var routerApi RouterApi
+		pathAction := CamelToSepName(strings.TrimPrefix(ty.Method(i).Name, "Action"), '-')
+		routerApi.Path = pathCtl + "/" + pathAction
+		routerApi.Action = value.Method(i).Interface().(func(c *gin.Context) interface{})
+		RouterApiList = append(RouterApiList, routerApi)
 	}
 }

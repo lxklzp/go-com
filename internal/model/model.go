@@ -44,8 +44,8 @@ func (b *Base) validate() {
 	}
 	if b.PageSize == 0 {
 		b.PageSize = 20
-	} else if b.PageSize > 10000 {
-		b.PageSize = 10000
+	} else if b.PageSize > MaxPageRead {
+		b.PageSize = MaxPageRead
 	}
 }
 

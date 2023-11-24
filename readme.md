@@ -14,7 +14,9 @@
 * etcd
 * 服务注册发现
 * 延迟队列
-* excel、csv
+* excel
+* csv
+* 文件压缩
 * email
 * 雪花算法
 * tcp

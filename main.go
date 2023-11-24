@@ -15,7 +15,6 @@ func main() {
 	global.InitLog("main")
 	global.InitDefine()
 	global.InitGormPg()
-	global.InitGormPgRes()
 	global.InitSnowflake()
 	global.Log.Debug("启动系统:" + strconv.Itoa(os.Getpid()))
 	global.InitEtcd()

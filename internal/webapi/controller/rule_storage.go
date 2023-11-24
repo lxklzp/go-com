@@ -10,12 +10,16 @@ import (
 	"time"
 )
 
-var RuleStorage ruleStorage
-
 type ruleStorage struct {
 }
 
-func (ctl *ruleStorage) ActionAdd(c *gin.Context) interface{} {
+func InitController() {}
+
+func init() {
+	global.AddRouterApi(ruleStorage{})
+}
+
+func (ctl ruleStorage) ActionAdd(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	if err = c.ShouldBindJSON(&m); err != nil {
@@ -46,7 +50,7 @@ func (ctl *ruleStorage) ActionAdd(c *gin.Context) interface{} {
 	return global.RespData(200, "", nil)
 }
 
-func (ctl *ruleStorage) ActionUpd(c *gin.Context) interface{} {
+func (ctl ruleStorage) ActionUpd(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	if err = c.ShouldBindJSON(&m); err != nil {
@@ -72,7 +76,7 @@ func (ctl *ruleStorage) ActionUpd(c *gin.Context) interface{} {
 	return global.RespData(200, "", nil)
 }
 
-func (ctl *ruleStorage) ActionList(c *gin.Context) interface{} {
+func (ctl ruleStorage) ActionList(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	var param model.ExtRuleStorage
@@ -86,7 +90,7 @@ func (ctl *ruleStorage) ActionList(c *gin.Context) interface{} {
 	return global.RespData(200, "", data)
 }
 
-func (ctl *ruleStorage) ActionExport(c *gin.Context) interface{} {
+func (ctl ruleStorage) ActionExport(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	var param model.ExtRuleStorage
@@ -101,7 +105,7 @@ func (ctl *ruleStorage) ActionExport(c *gin.Context) interface{} {
 	return global.RespData(200, "", map[string]interface{}{"path": path})
 }
 
-func (ctl *ruleStorage) ActionDel(c *gin.Context) interface{} {
+func (ctl ruleStorage) ActionDel(c *gin.Context) interface{} {
 	var err error
 	var param model.PrimaryId
 	if err = c.ShouldBindJSON(&param); err != nil {
