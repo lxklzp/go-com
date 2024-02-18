@@ -2,6 +2,7 @@ package file
 
 import (
 	"archive/zip"
+	"bufio"
 	"encoding/csv"
 	"fmt"
 	"github.com/xuri/excelize/v2"
@@ -99,6 +100,26 @@ func Zip(src string, dst string) {
 			file, _ := os.Open(src + "/" + v.Name())
 			io.Copy(writer, file)
 			file.Close()
+		}
+	}
+}
+
+// ReadLine 按行读取数据
+func ReadLine(filename string) {
+	f, err := os.Open(filename)
+	if err != nil {
+		global.Log.Fatal(err)
+	}
+	reader := bufio.NewReader(f)
+	for {
+		var line string
+		line, err = reader.ReadString('\n')
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			global.Log.Error(err)
+		} else {
+			fmt.Println(line)
 		}
 	}
 }

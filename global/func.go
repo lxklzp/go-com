@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"go-com/config"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"io"
+	"math"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -80,6 +84,10 @@ func CamelToSepName(field string, sep rune) string {
 	return string(buffer)
 }
 
+func SepNameToCamel(field string) string {
+	return strings.ReplaceAll(cases.Title(language.English).String(strings.ReplaceAll(strings.ToLower(field), "_", " ")), " ", "")
+}
+
 func Get(url string, param map[string]string, header map[string]string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -110,9 +118,9 @@ func Get(url string, param map[string]string, header map[string]string) ([]byte,
 
 	// 处理返回结果
 	result, err := io.ReadAll(resp.Body)
-	//if config.C.App.DebugMode {
-	//	Log.Debugf("请求 %s:%s\n响应 [%d] %s", url, param, resp.StatusCode, result)
-	//}
+	if config.C.App.DebugMode {
+		Log.Debugf("请求 %s:%s\n响应 [%d] %s", url, param, resp.StatusCode, result)
+	}
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != http.StatusOK {
@@ -239,4 +247,29 @@ func ExitNotify(close func()) {
 			}
 		}
 	}()
+}
+
+// IPString2Long 把ip字符串转为数值
+func IPString2Long(ip string) (uint, error) {
+	b := net.ParseIP(ip).To4()
+	if b == nil {
+		return 0, errors.New("invalid ipv4 format")
+	}
+
+	return uint(b[3]) | uint(b[2])<<8 | uint(b[1])<<16 | uint(b[0])<<24, nil
+}
+
+// Long2IPString 把数值转为ip字符串
+func Long2IPString(i uint) (string, error) {
+	if i > math.MaxUint32 {
+		return "", errors.New("beyond the scope of ipv4")
+	}
+
+	ip := make(net.IP, net.IPv4len)
+	ip[0] = byte(i >> 24)
+	ip[1] = byte(i >> 16)
+	ip[2] = byte(i >> 8)
+	ip[3] = byte(i)
+
+	return ip.String(), nil
 }

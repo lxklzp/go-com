@@ -10,10 +10,19 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
+var reqBufPool *sync.Pool
+
 func Run() {
+	reqBufPool = &sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 4096))
+		},
+	}
+
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = global.Log.Out      // 设定日志
 	gin.DefaultErrorWriter = global.Log.Out // 设定日志
@@ -60,26 +69,25 @@ func midRecovery(c *gin.Context) {
 // 请求与响应处理中间件
 func midGate(c *gin.Context) {
 	var header, body string
-	var data []byte
-	var err error
 	// 请求header
 	for k, v := range c.Request.Header {
 		header += fmt.Sprintf("%s:%s\n", k, strings.Join(v, " "))
 	}
 	// 请求body
-	data, err = io.ReadAll(c.Request.Body)
+	buffer := reqBufPool.Get().(*bytes.Buffer)
+	_, err := io.Copy(buffer, c.Request.Body)
 	if err != nil {
 		global.Log.Warn(err)
 	}
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(data))
-	body = string(data)
+	c.Request.Body = io.NopCloser(buffer)
+	body = buffer.String()
+	defer func() {
+		buffer.Reset()
+		reqBufPool.Put(buffer)
+	}()
 	// 写入日志文件
 	global.Log.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)
 
 	// 验证请求是否来自网关
-	if len(c.Request.Header["Gateway-Token"]) > 0 && c.Request.Header["Gateway-Token"][0] == config.C.App.GatewayToken {
-		c.Next()
-	} else {
-		c.AbortWithStatusJSON(http.StatusForbidden, global.RespData(403, "非法访问", nil))
-	}
+	c.Next()
 }

@@ -22,7 +22,7 @@ func (ctl rule) ActionAddStorage(c *gin.Context) interface{} {
 		return global.RespData(400, err.Error(), nil)
 	}
 
-	return global.RespData(200, "ActionAddStorage", nil)
+	return global.RespData(200, "ActionAddStorage", m)
 }
 
 func (ctl rule) ActionUpdStorage(c *gin.Context) interface{} {

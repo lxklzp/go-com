@@ -46,6 +46,7 @@ func InitGormMy() {
 	GormMy, err = gorm.Open(mysql.New(mysql.Config{
 		Conn: Db,
 	}), &gorm.Config{
+		SkipDefaultTransaction: true,
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
