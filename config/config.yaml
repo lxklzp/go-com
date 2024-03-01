@@ -4,12 +4,13 @@ App:
   DebugMode: true
   # 分布式
   IsDistributed: false
-  # 1 开发环境 2 测试环境
-  Environment: 1
+  # 1 开发环境 2 线上环境
+  Environment: 2
   # 项目统一前缀
   Prefix: go-com
   # 运行时的缓存文件目录 空表示：项目目录/runtime
   RuntimePath:
+
   # api 地址
   ApiAddr: 0.0.0.0:9701
   # web_api 地址
@@ -25,18 +26,6 @@ App:
   GatewayAddr: http://192.168.2.187:19080
   # 网关token
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
-  # 应用服务器地址
-  AppApiAddr: http://192.168.2.64:9701/
-
-Mysql:
-  Addr: 135.0.120.181:3306
-  User: itestor
-  Password: dDfd63n#ci2#
-  Dbname: alarm_center
-  # 获取数据库服务器的wait_timeout，然后设置ConnMaxLifetime比这个数值小10s左右。
-  ConnMaxLifetime: 180
-  MaxOpenConns: 200
-  MaxIdleConns: 10
 
 Pgsql:
   Host: 192.168.2.70
@@ -46,52 +35,3 @@ Pgsql:
   Dbname: alarm_center
   MaxOpenConns: 200
   MaxIdleConns: 10
-
-Etcd:
-  Addr:
-    - 192.168.2.70:12379
-  User: root
-  Password: mypass
-  CertFile:
-  KeyFile:
-  TrustedCAFile:
-
-Nebula:
-  Host: 192.168.2.70
-  Port: 9669
-  User: root
-  Password: nebula
-  Dbname: example_space
-
-Redis:
-  Addr: 135.0.120.180:6380
-  Password: e49S^cQG7m
-  Db: 0
-
-Kafka:
-  Servers: 135.0.120.180:9092
-  Username:
-  Password:
-  Topic:
-  Group:
-  SecurityProtocol:
-  SaslMechanisms:
-
-Rabbitmq:
-  Addr: 192.168.126.128:5672
-  User: guest
-  Password: guest
-
-Enum:
-  City:
-    - 0:省中心:0850
-    - 1:贵阳:0851
-    - 2:遵义:0852
-    - 3:安顺:0853
-    - 4:黔南:0854
-    - 5:黔东南:0855
-    - 6:铜仁:0856
-    - 7:毕节:0857
-    - 8:六盘水:0858
-    - 9:黔西南:0859
-    - 10:贵安:0860

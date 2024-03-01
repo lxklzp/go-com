@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-com/config"
-	"go-com/global"
+	"go-com/core/logr"
+	"go-com/core/tool"
 	"io"
 	"net/http"
 	"strings"
@@ -23,9 +24,9 @@ func Run() {
 		},
 	}
 
-	gin.SetMode(gin.ReleaseMode)
-	gin.DefaultWriter = global.Log.Out      // 设定日志
-	gin.DefaultErrorWriter = global.Log.Out // 设定日志
+	//gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = logr.L.Out      // 设定日志
+	gin.DefaultErrorWriter = logr.L.Out // 设定日志
 	r := gin.New()
 
 	r.Use(midGate, midRecovery) // 中间件
@@ -33,12 +34,12 @@ func Run() {
 	bind(r) // 绑定接口
 
 	// 启动
-	global.ServeApi = &http.Server{
+	config.ServeApi = &http.Server{
 		Addr:    config.C.App.ApiAddr,
 		Handler: r,
 	}
-	if err := global.ServeApi.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		global.Log.Fatal(err)
+	if err := config.ServeApi.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logr.L.Fatal(err)
 	}
 }
 
@@ -46,8 +47,8 @@ func Run() {
 func Shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := global.ServeApi.Shutdown(ctx); err != nil {
-		global.Log.Fatal(err)
+	if err := config.ServeApi.Shutdown(ctx); err != nil {
+		logr.L.Fatal(err)
 	}
 }
 
@@ -55,7 +56,7 @@ func Shutdown() {
 func midRecovery(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			msg := global.ErrorStack(err)
+			msg := tool.ErrorStack(err)
 			if config.C.App.DebugMode {
 				c.JSON(http.StatusOK, map[string]interface{}{"code": 500, "message": msg})
 			} else {
@@ -77,7 +78,7 @@ func midGate(c *gin.Context) {
 	buffer := reqBufPool.Get().(*bytes.Buffer)
 	_, err := io.Copy(buffer, c.Request.Body)
 	if err != nil {
-		global.Log.Warn(err)
+		logr.L.Warn(err)
 	}
 	c.Request.Body = io.NopCloser(buffer)
 	body = buffer.String()
@@ -86,7 +87,7 @@ func midGate(c *gin.Context) {
 		reqBufPool.Put(buffer)
 	}()
 	// 写入日志文件
-	global.Log.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)
+	logr.L.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)
 
 	// 验证请求是否来自网关
 	c.Next()

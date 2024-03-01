@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"go-com/config"
-	"go-com/global"
+	"go-com/core/filer"
+	"go-com/core/logr"
 	"os"
 	"os/exec"
 	"path"
@@ -11,33 +12,39 @@ import (
 
 func main() {
 	config.Load()
-	global.InitLog("build")
-
-	// 编译
 	var err error
 	root := config.Root
+
+	/***** 配置区域 开始 *****/
+	logr.InitLog("build")
+	reload := false // 是否完全重新打包
 	buildPath := root + "runtime/build/"
 	program := "main"
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("go build -o %s %s", root+program, root+"main.go"))
-	if err = cmd.Run(); err != nil {
-		global.Log.Fatal(err)
-	}
-
-	// 打包
 	fileList := []string{
 		program,
 		"config/config.yaml",
 	}
-	if err = os.RemoveAll(buildPath); err != nil {
-		global.Log.Fatal(err)
+	/***** 配置区域 结束 *****/
+
+	if err = cmd.Run(); err != nil {
+		logr.L.Fatal(err)
 	}
-	for _, file := range fileList {
-		if err = os.MkdirAll(buildPath+path.Dir(file), 0777); err != nil {
-			global.Log.Fatal(err)
+	if reload {
+		if err = os.RemoveAll(buildPath); err != nil {
+			logr.L.Fatal(err)
 		}
-		global.CopyFile(buildPath+file, root+file)
+		for _, file := range fileList {
+			if err = os.MkdirAll(buildPath+path.Dir(file), 0777); err != nil {
+				logr.L.Fatal(err)
+			}
+			filer.CopyFile(buildPath+file, root+file)
+		}
+	} else {
+		os.Remove(buildPath + program)
+		filer.CopyFile(buildPath+program, root+program)
 	}
 	if err = os.Remove(root + program); err != nil {
-		global.Log.Error(err)
+		logr.L.Error(err)
 	}
 }
