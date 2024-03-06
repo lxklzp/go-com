@@ -14,7 +14,7 @@ import (
 
 type Config struct {
 	Host     string
-	Port     string
+	Port     int
 	User     string
 	Password string
 	Dbname   string
@@ -23,7 +23,7 @@ type Config struct {
 
 // NewDb 实例化gorm的postgresql连接
 func NewDb(cfg Config) *gorm.DB {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
 	return orm.NewDb(postgres.Open(dsn), cfg.DbConfig)
 }
 

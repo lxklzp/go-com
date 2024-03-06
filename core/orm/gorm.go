@@ -45,8 +45,9 @@ func NewDb(dialector gorm.Dialector, cfg DbConfig) *gorm.DB {
 			SingularTable: true,
 			TablePrefix:   cfg.Prefix,
 		},
-		Logger:                 newLogger,
-		SkipDefaultTransaction: true,
+		Logger:                                   newLogger,
+		SkipDefaultTransaction:                   true,
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		logr.L.Fatal(err)
