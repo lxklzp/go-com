@@ -2,6 +2,7 @@ package pg
 
 import (
 	"fmt"
+	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/orm"
 	"gorm.io/driver/postgres"
@@ -13,18 +14,13 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Dbname   string
-	orm.DbConfig
+	config.Postgresql
 }
 
 // NewDb 实例化gorm的postgresql连接
 func NewDb(cfg Config) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
-	return orm.NewDb(postgres.Open(dsn), cfg.DbConfig)
+	return orm.NewDb(postgres.Open(dsn), orm.DbConfig{DbConfig: cfg.DbConfig})
 }
 
 // GenerateFieldSql 将字段列表转换成字段sql

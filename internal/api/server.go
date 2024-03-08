@@ -17,7 +17,7 @@ import (
 
 var reqBufPool *sync.Pool
 
-func Run() {
+func Run(serv *http.Server) {
 	reqBufPool = &sync.Pool{
 		New: func() interface{} {
 			return bytes.NewBuffer(make([]byte, 0, 4096))
@@ -34,20 +34,20 @@ func Run() {
 	bind(r) // 绑定接口
 
 	// 启动
-	config.ServeApi = &http.Server{
+	serv = &http.Server{
 		Addr:    config.C.App.ApiAddr,
 		Handler: r,
 	}
-	if err := config.ServeApi.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := serv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		logr.L.Fatal(err)
 	}
 }
 
 // Shutdown 关闭
-func Shutdown() {
+func Shutdown(serv *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := config.ServeApi.Shutdown(ctx); err != nil {
+	if err := serv.Shutdown(ctx); err != nil {
 		logr.L.Fatal(err)
 	}
 }

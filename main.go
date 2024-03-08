@@ -1,11 +1,14 @@
 package main
 
+import "C"
 import (
 	"context"
 	"go-com/config"
 	"go-com/core/logr"
+	"go-com/core/pg"
 	"go-com/core/tool"
 	"go-com/internal/api"
+	"go-com/internal/app"
 	"os"
 	"strconv"
 )
@@ -13,13 +16,14 @@ import (
 func main() {
 	config.Load()
 	logr.InitLog("main")
-	config.InitDefine()
+	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
+
 	logr.L.Debug("启动系统:" + strconv.Itoa(os.Getpid()))
 
-	api.Run()
+	api.Run(app.ServeApi)
 
 	tool.ExitNotify(func() {
-		api.Shutdown()
+		api.Shutdown(app.ServeApi)
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

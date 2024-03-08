@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"go-com/core/pg"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
-	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -39,9 +37,6 @@ var DefaultTimeMax Timestamp
 var KafkaConsumeWorkerNumCh chan bool
 var DelayQueueConsumeWorkerNumCh chan bool
 
-var ServeApi *http.Server
-var Pg *gorm.DB
-
 func InitDefine() {
 	KafkaConsumeWorkerNumCh = make(chan bool, C.App.MaxKafkaConsumeWorkerNum)
 	DelayQueueConsumeWorkerNumCh = make(chan bool, C.App.MaxDelayQueueConsumeWorkerNum)
@@ -49,8 +44,6 @@ func InitDefine() {
 	DefaultTimeMin = Timestamp(tm)
 	tm, _ = time.ParseInLocation(DateTimeFormatter, "2034-01-01 00:00:00", time.Local)
 	DefaultTimeMax = Timestamp(tm)
-
-	Pg = pg.NewDb(C.Pg)
 }
 
 type Timestamp time.Time

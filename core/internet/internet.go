@@ -3,7 +3,7 @@ package internet
 import (
 	"crypto/tls"
 	"github.com/jordan-wright/email"
-	"go-com/global"
+	"go-com/core/logr"
 	"net/smtp"
 )
 
@@ -27,10 +27,10 @@ func Email() {
 	e.Text = []byte("")
 	_, err = e.AttachFile("")
 	if err != nil {
-		global.Log.Panic(err)
+		logr.L.Panic(err)
 	}
 	err = e.SendWithTLS(cfg.SmtpHost+":"+cfg.SmtpPort, smtp.PlainAuth("", cfg.FromEmail, cfg.SmtpPass, cfg.SmtpHost), &tls.Config{ServerName: cfg.SmtpHost})
 	if err != nil {
-		global.Log.Panic(err)
+		logr.L.Panic(err)
 	}
 }
