@@ -117,7 +117,7 @@ func camelToSepName(field string, sep rune) string {
 	return string(buffer)
 }
 
-func AddRouterApi(ctl interface{}) {
+func AddRouterApi(ctl interface{}, routerApiList *[]RouterApi) {
 	ty := reflect.TypeOf(ctl)
 	value := reflect.ValueOf(ctl)
 	pathCtl := camelToSepName(ty.Name(), '-')
@@ -127,6 +127,6 @@ func AddRouterApi(ctl interface{}) {
 		pathAction := camelToSepName(strings.TrimPrefix(ty.Method(i).Name, "Action"), '-')
 		routerApi.Path = pathCtl + "/" + pathAction
 		routerApi.Action = value.Method(i).Interface().(func(c *gin.Context) interface{})
-		RouterApiList = append(RouterApiList, routerApi)
+		*routerApiList = append(*routerApiList, routerApi)
 	}
 }

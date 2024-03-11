@@ -13,7 +13,7 @@ type rule struct {
 func InitController() {}
 
 func init() {
-	config.AddRouterApi(rule{})
+	config.AddRouterApi(rule{}, &config.RouterApiList)
 }
 
 func (ctl rule) ActionAddStorage(c *gin.Context) interface{} {

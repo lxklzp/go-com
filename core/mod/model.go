@@ -27,14 +27,14 @@ type PrimaryId struct {
 	ID int64
 }
 
-type trim string
+type Trim string
 
-func (t *trim) UnmarshalJSON(data []byte) error {
+func (t *Trim) UnmarshalJSON(data []byte) error {
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
-	*t = trim(strings.TrimSpace(s))
+	*t = Trim(strings.TrimSpace(s))
 	return nil
 }
 
@@ -55,8 +55,8 @@ func IsZero(value interface{}) bool {
 		if value == "" {
 			return true
 		}
-	case trim:
-		if value == trim("") || value == trim("%%") {
+	case Trim:
+		if value == Trim("") || value == Trim("%%") {
 			return true
 		}
 	case int8:
