@@ -3,6 +3,7 @@ package tool
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"go-com/config"
 	"go-com/core/logr"
@@ -85,6 +86,14 @@ func ErrorStack(err interface{}) string {
 
 	logr.L.Error(msg)
 	return msg
+}
+
+func ErrorStr(err error) string {
+	switch err.(type) {
+	case validator.ValidationErrors:
+		return fmt.Sprintf("%s", err.(validator.ValidationErrors).Translate(config.Trans))
+	}
+	return err.Error()
 }
 
 type ResponseData struct {

@@ -4,6 +4,9 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/locales/en"
+	"github.com/go-playground/locales/zh"
+	ut "github.com/go-playground/universal-translator"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -34,16 +37,20 @@ const (
 
 var DefaultTimeMin Timestamp
 var DefaultTimeMax Timestamp
+var Trans ut.Translator
 var KafkaConsumeWorkerNumCh chan bool
 var DelayQueueConsumeWorkerNumCh chan bool
 
 func InitDefine() {
-	KafkaConsumeWorkerNumCh = make(chan bool, C.App.MaxKafkaConsumeWorkerNum)
-	DelayQueueConsumeWorkerNumCh = make(chan bool, C.App.MaxDelayQueueConsumeWorkerNum)
 	tm, _ := time.ParseInLocation(DateTimeFormatter, "1980-01-01 00:00:00", time.Local)
 	DefaultTimeMin = Timestamp(tm)
 	tm, _ = time.ParseInLocation(DateTimeFormatter, "2034-01-01 00:00:00", time.Local)
 	DefaultTimeMax = Timestamp(tm)
+
+	Trans, _ = ut.New(en.New(), zh.New()).GetTranslator("zh")
+
+	KafkaConsumeWorkerNumCh = make(chan bool, C.App.MaxKafkaConsumeWorkerNum)
+	DelayQueueConsumeWorkerNumCh = make(chan bool, C.App.MaxDelayQueueConsumeWorkerNum)
 }
 
 type Timestamp time.Time

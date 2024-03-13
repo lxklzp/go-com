@@ -20,7 +20,7 @@ func (ctl rule) ActionAddStorage(c *gin.Context) interface{} {
 	var err error
 	var m model.RuleStorage
 	if err = c.ShouldBindJSON(&m); err != nil {
-		return tool.RespData(400, err.Error(), nil)
+		return tool.RespData(400, tool.ErrorStr(err), nil)
 	}
 
 	return tool.RespData(200, "ActionAddStorage", m)
