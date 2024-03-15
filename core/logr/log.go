@@ -26,7 +26,11 @@ func InitLog(filename string) {
 
 func NewLog(filename string) *logrus.Logger {
 	L := logrus.New()
-	L.SetLevel(logrus.DebugLevel)
+	if config.C.App.DebugMode {
+		L.SetLevel(logrus.DebugLevel)
+	} else {
+		L.SetLevel(logrus.InfoLevel)
+	}
 	L.SetFormatter(&logFormatter{})
 	L.SetReportCaller(true) // 记录go文件和行号信息
 

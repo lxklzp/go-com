@@ -138,9 +138,7 @@ func httpReqResp(req *http.Request, url string, param interface{}) ([]byte, erro
 
 	// 处理返回结果
 	result, err := io.ReadAll(resp.Body)
-	if config.C.App.DebugMode {
-		logr.L.Debugf("请求 %s:%s\n响应 [%d] %s", url, param, resp.StatusCode, result)
-	}
+	logr.L.Debugf("请求 %s:%s\n响应 [%d] %s", url, param, resp.StatusCode, result)
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != http.StatusOK {
