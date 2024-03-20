@@ -25,6 +25,9 @@ const (
 	DateTimeFormatter       = "2006-01-02 15:04:05"
 	MonthNumberFormatter    = "200601"
 	DateTimeNumberFormatter = "20060102150405"
+	DateNumberFormatter     = "20060102"
+
+	RedisErrNil = "redis: nil"
 )
 
 const (

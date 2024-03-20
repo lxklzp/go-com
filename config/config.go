@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -44,6 +45,7 @@ type app struct {
 
 	GatewayAddr  string
 	GatewayToken string
+	PublicPath   string
 }
 
 type DbConfig struct {
@@ -66,11 +68,12 @@ type Postgresql struct {
 func decode() {
 	InitDefine()
 
-	RuntimePath = C.App.RuntimePath
-	if RuntimePath == "" {
-		RuntimePath = Root + "runtime"
+	if C.App.RuntimePath == "" {
+		C.App.RuntimePath = Root + "runtime"
 	}
-	C.App.RuntimePath = RuntimePath
+	if C.App.PublicPath == "" {
+		C.App.PublicPath = Root + "runtime/public"
+	}
 }
 
 // Load 加载配置文件
@@ -88,4 +91,17 @@ func Load() {
 	}
 
 	decode()
+
+	// 通过启动指令配置
+	var id int64
+	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023")
+	flag.Parse()
+	if id > 0 {
+		C.App.Id = id
+	}
+
+	// 验证id
+	if C.App.Id > 1023 || C.App.Id < 1 {
+		log.Fatal("id值在1和1023之间")
+	}
 }

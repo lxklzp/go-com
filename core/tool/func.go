@@ -210,3 +210,16 @@ func Long2IPString(i uint) (string, error) {
 
 	return ip.String(), nil
 }
+
+// FormatFileSize 格式化文件大小
+func FormatFileSize(size int64) string {
+	if size >= config.GB {
+		return fmt.Sprintf("%.2f Gb", float64(size)/float64(config.GB))
+	} else if size >= config.MB {
+		return fmt.Sprintf("%.2f Mb", float64(size)/float64(config.MB))
+	} else if size >= config.KB {
+		return fmt.Sprintf("%.2f Kb", float64(size)/float64(config.KB))
+	} else {
+		return fmt.Sprintf("%d B", size)
+	}
+}

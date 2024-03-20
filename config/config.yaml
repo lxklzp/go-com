@@ -1,4 +1,5 @@
 App:
+  # 在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023
   Id: 1
   # 调试模式
   DebugMode: true
@@ -26,6 +27,8 @@ App:
   GatewayAddr: http://192.168.2.187:19080
   # 网关token
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
+  # 开放目录 空表示：项目目录/runtime/public
+  PublicPath:
 
 Pgsql:
   Host: 192.168.2.70
