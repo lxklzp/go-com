@@ -43,9 +43,10 @@ type app struct {
 	MaxKafkaConsumeWorkerNum      int32
 	MaxDelayQueueConsumeWorkerNum int32
 
-	GatewayAddr  string
-	GatewayToken string
-	PublicPath   string
+	GatewayAddr        string
+	GatewayToken       string
+	MaxMultipartMemory int64
+	PublicPath         string
 }
 
 type DbConfig struct {

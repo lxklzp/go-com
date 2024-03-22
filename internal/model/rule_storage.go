@@ -5,6 +5,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"go-com/config"
 	"go-com/core/mod"
+	"go-com/internal/app"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -76,7 +77,7 @@ func (m *RuleStorage) FormatList(list []RuleStorage, c *gin.Context) {
 }
 
 func (m *RuleStorage) queryList(param ExtRuleStorage) *gorm.DB {
-	query := config.Pg.Table("rule_storage ll").Where("ll.id>0")
+	query := app.Pg.Table("rule_storage ll").Where("ll.id>0")
 	mod.FilterWhere(query, "ll.id=?", param.ID)
 	mod.FilterWhere(query, "ll.specialty=?", param.Specialty)
 	mod.FilterWhere(query, "ll.net_manage=?", param.NetManage)

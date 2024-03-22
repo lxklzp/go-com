@@ -5,6 +5,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	zhTrans "github.com/go-playground/validator/v10/translations/zh"
 	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
@@ -24,10 +27,19 @@ func Run(serv *http.Server) {
 		},
 	}
 
+	// 表单验证错误信息的中文翻译
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		if err := zhTrans.RegisterDefaultTranslations(v, config.Trans); err != nil {
+			logr.L.Fatal(err)
+		}
+	}
+
 	//gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = logr.L.Out      // 设定日志
 	gin.DefaultErrorWriter = logr.L.Out // 设定日志
 	r := gin.New()
+
+	r.MaxMultipartMemory = config.C.App.MaxMultipartMemory // 设置最大上传文件
 
 	r.Use(midGate, midRecovery) // 中间件
 

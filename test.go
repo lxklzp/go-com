@@ -1,7 +1,9 @@
 package main
 
+import "fmt"
+
 func main() {
-	//db, err := sql.Open("godror", `user="scott" password="tiger" connectString="dbhost:1521/orclpdb1"
-	//poolSessionTimeout=42s configDir="/tmp/admin"
-	//heterogeneousPool=false standaloneConnection=false`)
+	index := 100
+	fmt.Printf("%012d", index)
+	fmt.Printf("%012.1f", 12.34)
 }

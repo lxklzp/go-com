@@ -29,6 +29,8 @@ App:
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
   # 开放目录 空表示：项目目录/runtime/public
   PublicPath:
+  # 文件上传大小限制 单位Mb
+  MaxMultipartMemory: 1024
 
 Pgsql:
   Host: 192.168.2.70
