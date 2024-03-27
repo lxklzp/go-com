@@ -2,7 +2,6 @@ package security
 
 import (
 	"bytes"
-	"crypto/aes"
 	"crypto/cipher"
 	"crypto/des"
 	"crypto/rand"
@@ -84,7 +83,6 @@ func RsaDecrypt(ciphertext string, privateKeyFilename string) ([]byte, error) {
 	return rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherByte)
 }
 
-// TripleDesEncrypt 3DES加密
 func TripleDesEncrypt(plain []byte, key []byte, iv []byte) (string, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
@@ -106,7 +104,6 @@ func TripleDesEncrypt(plain []byte, key []byte, iv []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(crypted), nil
 }
 
-// TripleDesDecrypt 3DES解密
 func TripleDesDecrypt(ciphertext string, key []byte, iv []byte) ([]byte, error) {
 	cipherByte, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
@@ -120,50 +117,6 @@ func TripleDesDecrypt(ciphertext string, key []byte, iv []byte) ([]byte, error) 
 
 	// CBC解密
 	blockMode := cipher.NewCBCDecrypter(block, iv)
-	crypted := make([]byte, len(cipherByte))
-	blockMode.CryptBlocks(crypted, cipherByte)
-
-	// pkcs7UnPadding
-	length := len(crypted)
-	unPadding := int(crypted[length-1])
-	return crypted[:(length - unPadding)], nil
-}
-
-func AesEncrypt(data []byte, key []byte) (string, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	blockSize := block.BlockSize()
-
-	// pkcs7Padding
-	padding := blockSize - len(data)%blockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	encryptBytes := append(data, padText...)
-
-	// CBC加密
-	crypted := make([]byte, len(encryptBytes))
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
-	blockMode.CryptBlocks(crypted, encryptBytes)
-	return base64.StdEncoding.EncodeToString(crypted), nil
-}
-
-func AesDecrypt(ciphertext string, key []byte) ([]byte, error) {
-	cipherByte, err := base64.StdEncoding.DecodeString(ciphertext)
-	if err != nil {
-		return nil, err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	blockSize := block.BlockSize()
-
-	// CBC解密
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
 	crypted := make([]byte, len(cipherByte))
 	blockMode.CryptBlocks(crypted, cipherByte)
 

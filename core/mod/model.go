@@ -19,12 +19,21 @@ const MaxPageWrite = 200
 type Base struct {
 	TimeFrom string `gorm:"-"`
 	TimeTo   string `gorm:"-"`
-	Page     int    `gorm:"-"`
-	PageSize int    `gorm:"-"`
+	Page     int    `gorm:"-" json:"pageNo"`
+	PageSize int    `gorm:"-" json:"pageSize"`
 }
 
 type PrimaryId struct {
-	ID int64
+	ID int64 `json:"id"`
+}
+
+type PrimaryIdName struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+type Name struct {
+	Name string `json:"name"`
 }
 
 type Trim string
@@ -153,7 +162,7 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 	}
 
 	// 创建导出文件夹
-	path := config.RuntimePath + "/export"
+	path := config.RuntimePath + "/public"
 	relativePath := "/" + time.Now().Format(config.MonthNumberFormatter)
 	path += relativePath
 	if err = os.MkdirAll(path, 0755); err != nil {

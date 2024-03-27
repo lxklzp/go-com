@@ -34,7 +34,7 @@ func Run(serv *http.Server) {
 		}
 	}
 
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = logr.L.Out      // 设定日志
 	gin.DefaultErrorWriter = logr.L.Out // 设定日志
 	r := gin.New()

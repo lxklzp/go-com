@@ -27,6 +27,10 @@ func init() {
 type config struct {
 	App        app
 	Postgresql Postgresql
+	Clickhouse Clickhouse
+	Kafka      Kafka
+	Mysql      Mysql
+	Redis      Redis
 }
 
 type app struct {
@@ -37,16 +41,14 @@ type app struct {
 	Prefix        string
 	RuntimePath   string
 
-	ApiAddr                       string
-	WebApiAddr                    string
-	KafkaToLog                    bool
-	MaxKafkaConsumeWorkerNum      int32
-	MaxDelayQueueConsumeWorkerNum int32
+	ApiAddr                  string
+	WebApiAddr               string
+	KafkaToLog               bool
+	MaxKafkaConsumeWorkerNum int32
 
-	GatewayAddr        string
 	GatewayToken       string
-	MaxMultipartMemory int64
 	PublicPath         string
+	MaxMultipartMemory int64
 }
 
 type DbConfig struct {
@@ -65,12 +67,44 @@ type Postgresql struct {
 	DbConfig DbConfig
 }
 
+type Clickhouse struct {
+	Addr     string
+	User     string
+	Password string
+	Dbname   string
+	DbConfig DbConfig
+}
+
+type Kafka struct {
+	Servers          string
+	Username         string
+	Password         string
+	Topic            string
+	Group            string
+	SecurityProtocol string
+	SaslMechanisms   string
+}
+
+type Mysql struct {
+	Addr     string
+	User     string
+	Password string
+	Dbname   string
+	DbConfig DbConfig
+}
+
+type Redis struct {
+	Addr     string
+	Password string
+	Db       int
+}
+
 // 将配置参数格式化为内存数据结构
 func decode() {
 	InitDefine()
 
 	if C.App.RuntimePath == "" {
-		C.App.RuntimePath = Root + "runtime"
+		RuntimePath = Root + "runtime"
 	}
 	if C.App.PublicPath == "" {
 		C.App.PublicPath = Root + "runtime/public"

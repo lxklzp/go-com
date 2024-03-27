@@ -17,7 +17,8 @@ const (
 	snowflakeEpoch       int64 = 1682524800000 // 2023-04-27 00:00:00 上线后不能修改，否则会生成相同的ID
 )
 
-var Snowflake SnowflakeWorker
+var SnowflakeMessage SnowflakeWorker
+var SnowflakeComm SnowflakeWorker
 
 type SnowflakeWorker struct {
 	mu        sync.Mutex
@@ -27,7 +28,8 @@ type SnowflakeWorker struct {
 }
 
 func InitSnowflake() {
-	Snowflake = NewSnowflake()
+	SnowflakeMessage = NewSnowflake()
+	SnowflakeComm = NewSnowflake()
 }
 
 func NewSnowflake() SnowflakeWorker {

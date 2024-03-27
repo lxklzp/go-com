@@ -2,28 +2,22 @@ package kafka
 
 import (
 	queue "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/sirupsen/logrus"
 	"go-com/config"
 	"go-com/core/logr"
 	"time"
 )
 
 type Config struct {
-	Servers          string
-	Username         string
-	Password         string
-	Topic            string
-	Group            string
-	SecurityProtocol string
-	SaslMechanisms   string
+	config.Kafka
 }
 
 type Kafka struct {
 	Consumer *queue.Consumer
+	Producer *queue.Producer
+	cfgP     Config         // 生产者配置缓存
+	L        *logrus.Logger // 消费的消息日志，根据config.KafkaToLog判断是否写日志
 }
-
-/*
-kafka日志目录：/data/logs/kafka/kafka.out
-*/
 
 // InitConsumer offset：earliest、latest
 func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
@@ -62,6 +56,9 @@ func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
 		logr.L.Fatal(err)
 	}
 	logr.L.Infof("[kafka] 消费者连接到kafka并订阅主题%s，等待消息...", cfg.Topic)
+	if config.C.App.KafkaToLog {
+		kafka.L = logr.NewLog("kafka_"+cfg.Topic, false)
+	}
 }
 
 func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
@@ -73,7 +70,7 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 	switch e := event.(type) {
 	case *queue.Message:
 		if config.C.App.KafkaToLog {
-			logr.L.Infof("[kafka] consume %s: %s", e.TopicPartition, string(e.Value))
+			kafka.L.Infof("[%s] %s: %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Value))
 		}
 		// 处理消息
 		config.KafkaConsumeWorkerNumCh <- true
@@ -100,7 +97,13 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 	}
 }
 
-func (kafka *Kafka) Produce(cfg Config, data []byte) {
+func (kafka *Kafka) CloseConsumer() {
+	kafka.Consumer.Close()
+}
+
+func (kafka *Kafka) InitProducer(cfg Config) {
+	var err error
+	kafka.cfgP = cfg
 	// 建立连接
 	cfgMap := queue.ConfigMap{
 		"bootstrap.servers": cfg.Servers,
@@ -113,14 +116,17 @@ func (kafka *Kafka) Produce(cfg Config, data []byte) {
 	}
 
 	// 创建生产者
-	p, err := queue.NewProducer(&cfgMap)
+	kafka.Producer, err = queue.NewProducer(&cfgMap)
 	if err != nil {
-		logr.L.Error(err)
+		logr.L.Fatal(err)
 	}
+}
 
+func (kafka *Kafka) Produce(data []byte) {
+	var err error
 	// Delivery report handler for produced messages
 	go func() {
-		for e := range p.Events() {
+		for e := range kafka.Producer.Events() {
 			switch ev := e.(type) {
 			case *queue.Message:
 				if ev.TopicPartition.Error != nil {
@@ -133,9 +139,9 @@ func (kafka *Kafka) Produce(cfg Config, data []byte) {
 	}()
 
 	// Produce messages to topic (asynchronously)
-	topic := cfg.Topic
+	topic := kafka.cfgP.Topic
 	for {
-		err = p.Produce(&queue.Message{
+		err = kafka.Producer.Produce(&queue.Message{
 			TopicPartition: queue.TopicPartition{Topic: &topic, Partition: queue.PartitionAny},
 			Value:          data,
 		}, nil)
@@ -152,8 +158,11 @@ func (kafka *Kafka) Produce(cfg Config, data []byte) {
 	}
 
 	// Wait for message deliveries before shutting down
-	for p.Flush(10000) > 0 {
+	for kafka.Producer.Flush(10000) > 0 {
 		logr.L.Info("[kafka] Still waiting to flush outstanding messages\n")
 	}
-	p.Close()
+}
+
+func (kafka *Kafka) CloseProducer() {
+	kafka.Producer.Close()
 }

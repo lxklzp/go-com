@@ -15,11 +15,11 @@ import (
 
 func main() {
 	config.Load()
-	logr.InitLog("main")
+	logr.InitLog("web")
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
+	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 
-	logr.L.Debug("启动系统:" + strconv.Itoa(os.Getpid()))
-
+	// 启动接口服务
 	api.Run(app.ServeApi)
 
 	tool.ExitNotify(func() {

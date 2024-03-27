@@ -7,5 +7,7 @@ import (
 )
 
 var ServeApi *http.Server
+var Clickhouse *gorm.DB
 var Pg *gorm.DB
+var Mysql *gorm.DB
 var ProxyVmc *httputil.ReverseProxy

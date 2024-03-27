@@ -11,6 +11,7 @@ import (
 	"golang.org/x/text/language"
 	"io"
 	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -29,7 +30,7 @@ func ExitNotify(close func()) {
 		for s := range ch {
 			switch s {
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL:
-				logr.L.Debug("关闭系统")
+				logr.L.Info("关闭系统")
 				close()
 				os.Exit(0)
 			}
@@ -88,6 +89,7 @@ func ErrorStack(err interface{}) string {
 	return msg
 }
 
+// ErrorStr 增加表单验证错误信息的中文翻译
 func ErrorStr(err error) string {
 	switch err.(type) {
 	case validator.ValidationErrors:
@@ -209,6 +211,42 @@ func Long2IPString(i uint) (string, error) {
 	ip[3] = byte(i)
 
 	return ip.String(), nil
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func RandString(n int) string {
+	b := make([]byte, n)
+	length := int64(len(letterBytes))
+	for i := range b {
+
+		b[i] = letterBytes[rand.Int63()%length]
+	}
+	return string(b)
+}
+
+// InArrayStr 值在切片中是否存在
+func InArrayStr(list []string, value string) bool {
+	if list == nil {
+		return false
+	}
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+// IntersectStr 求map[string]bool的交集
+func IntersectStr(a map[string]bool, b map[string]bool) map[string]bool {
+	res := make(map[string]bool)
+	for v := range a {
+		if _, ok := b[v]; ok {
+			res[v] = true
+		}
+	}
+	return res
 }
 
 // FormatFileSize 格式化文件大小

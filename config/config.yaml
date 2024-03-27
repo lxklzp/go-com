@@ -1,12 +1,12 @@
 App:
   # 在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023
   Id: 1
-  # 调试模式
+  # 调试模式（日记级别：debug）
   DebugMode: true
   # 分布式
   IsDistributed: false
-  # 1 开发环境 2 线上环境
-  Environment: 2
+  # 1 开发环境（打印sql日志） 2 线上环境
+  Environment: 1
   # 项目统一前缀
   Prefix: go-com
   # 运行时的缓存文件目录 空表示：项目目录/runtime
@@ -18,13 +18,9 @@ App:
   WebApiAddr: 0.0.0.0:9702
   # kafka消费是否写入日志
   KafkaToLog: true
-  # 最大延迟队列消费者数目
-  MaxDelayQueueConsumeWorkerNum: 100
-  # 延迟队列消息最大缓存时间 秒
-  MaxDelayQueueTimeout: 86400
+  # kafka最大消费者数目
+  MaxKafkaConsumeWorkerNum: 10
 
-  # 网关地址
-  GatewayAddr: http://192.168.2.187:19080
   # 网关token
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
   # 开放目录 空表示：项目目录/runtime/public
@@ -32,11 +28,42 @@ App:
   # 文件上传大小限制 单位Mb
   MaxMultipartMemory: 1024
 
-Pgsql:
+Postgresql:
   Host: 192.168.2.70
   Port: 5432
   User: postgres
   Password: mypass
-  Dbname: alarm_center
+  Dbname: test
   MaxOpenConns: 200
   MaxIdleConns: 10
+
+Clickhouse:
+  Addr: 192.168.2.70:9000
+  User: itestor
+  Password: 36h2E5paQhQ6Bc8C
+  Dbname: test
+
+Kafka:
+  Servers: 192.168.2.22:9092
+  Username:
+  Password:
+  Topic: for-test
+  Group: test-group6
+  SecurityProtocol:
+  SaslMechanisms:
+
+Mysql:
+  Addr: 192.168.2.70:3306
+  User: root
+  Password: mypass
+  Dbname: phoenix_v2_auth
+  DbConfig:
+    Prefix:
+    ConnMaxLifetime: 180
+    MaxOpenConns: 200
+    MaxIdleConns: 10
+
+RedisBot:
+  Addr: 192.168.2.70:6380
+  Password: mypass
+  Db: 0

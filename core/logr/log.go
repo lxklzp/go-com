@@ -20,19 +20,30 @@ func (m *logFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(content), nil
 }
 
-func InitLog(filename string) {
-	L = NewLog(filename)
+type logFormatterEmpty struct{}
+
+// Format 日志格式
+func (m *logFormatterEmpty) Format(entry *logrus.Entry) ([]byte, error) {
+	return []byte(entry.Message + "\n"), nil
 }
 
-func NewLog(filename string) *logrus.Logger {
+func InitLog(filename string) {
+	L = NewLog(filename, true)
+}
+
+func NewLog(filename string, format bool) *logrus.Logger {
 	L := logrus.New()
 	if config.C.App.DebugMode {
 		L.SetLevel(logrus.DebugLevel)
 	} else {
 		L.SetLevel(logrus.InfoLevel)
 	}
-	L.SetFormatter(&logFormatter{})
-	L.SetReportCaller(true) // 记录go文件和行号信息
+	if format {
+		L.SetFormatter(&logFormatter{})
+		L.SetReportCaller(true) // 记录go文件和行号信息
+	} else {
+		L.SetFormatter(&logFormatterEmpty{})
+	}
 
 	// 创建日志目录
 	path := config.RuntimePath + "/log"

@@ -3,13 +3,9 @@ package pg
 import (
 	"fmt"
 	"go-com/config"
-	"go-com/core/logr"
 	"go-com/core/orm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os/exec"
-	"regexp"
-	"runtime"
 	"strings"
 )
 
@@ -42,40 +38,6 @@ func GetSchemaTableName(tableName string) (string, string) {
 		tableName = names[1]
 	}
 	return schemaName, tableName
-}
-
-// GetUniqueKeySql 查找指定表中的一个唯一索引列的sql呈现
-func GetUniqueKeySql(db *gorm.DB, tableName string) string {
-	schemaName, tableName := GetSchemaTableName(tableName)
-	var rows []map[string]interface{}
-	sql := fmt.Sprintf("select indexdef from pg_indexes where schemaname='%s' and tablename='%s';", schemaName, tableName)
-	db.Raw(sql).Scan(&rows)
-	for _, row := range rows {
-		indexdef := row["indexdef"].(string)
-		if strings.Contains(indexdef, "UNIQUE") {
-			reg, _ := regexp.Compile(`\((.+)\)`)
-			return reg.FindStringSubmatch(indexdef)[1]
-		}
-	}
-	return ""
-}
-
-// Gentool 执行gentool指令
-func Gentool(dbCfg map[string]string, tableName string) {
-	var err error
-	var res []byte
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		dbCfg["host"], dbCfg["user"], dbCfg["password"], dbCfg["dbname"], dbCfg["port"])
-	if runtime.GOOS == "windows" {
-		res, err = exec.Command("gentool", "-db", "postgres", "-dsn", dsn, "-onlyModel", "-tables", tableName).CombinedOutput()
-	} else {
-		res, err = exec.Command("sh", "-c", fmt.Sprintf("gentool -db postgres -dsn %s sslmode=disable -onlyModel -tables %s", dsn, tableName)).CombinedOutput()
-	}
-	if err != nil {
-		logr.L.Fatal(err)
-	}
-	logr.L.Info(string(res))
 }
 
 // GetDbTables 获取数据库的所有表

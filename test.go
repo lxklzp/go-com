@@ -1,9 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"go-com/config"
+	"go-com/core/logr"
+	"go-com/core/my"
+	"go-com/internal/app"
+)
 
 func main() {
-	index := 100
-	fmt.Printf("%012d", index)
-	fmt.Printf("%012.1f", 12.34)
+	config.Load()
+	logr.InitLog("test")
+	app.Mysql = my.NewDb(my.Config{Mysql: config.C.Mysql})
+
+	var m map[string]interface{}
+	app.Mysql.Table("auth_user").Take(&m)
+	fmt.Println(m)
 }

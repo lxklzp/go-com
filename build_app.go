@@ -16,11 +16,11 @@ func main() {
 	root := config.Root
 
 	/***** 配置区域 开始 *****/
-	logr.InitLog("build")
-	reload := false // 是否完全重新打包
-	buildPath := root + "runtime/build/"
-	program := "main"
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("go build -o %s %s", root+program, root+"main.go"))
+	logr.InitLog("build_app")
+	reload := true // 是否完全重新打包
+	buildPath := root + "runtime/build_app/"
+	program := "main_app"
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("go build -o %s %s", root+program, root+"main_app.go"))
 	fileList := []string{
 		program,
 		"config/config.yaml",
@@ -35,11 +35,12 @@ func main() {
 			logr.L.Fatal(err)
 		}
 		for _, file := range fileList {
-			if err = os.MkdirAll(buildPath+path.Dir(file), 0777); err != nil {
+			if err = os.MkdirAll(buildPath+path.Dir(file), 0755); err != nil {
 				logr.L.Fatal(err)
 			}
 			filer.CopyFile(buildPath+file, root+file)
 		}
+		os.Mkdir(buildPath+"/runtime", 0777)
 	} else {
 		os.Remove(buildPath + program)
 		filer.CopyFile(buildPath+program, root+program)
@@ -47,4 +48,6 @@ func main() {
 	if err = os.Remove(root + program); err != nil {
 		logr.L.Error(err)
 	}
+
+	logr.L.Infof("打包成功：%s", buildPath+program)
 }

@@ -3,13 +3,12 @@ package rds
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"go-com/config"
 	"go-com/core/logr"
 )
 
 type Config struct {
-	Addr     string
-	Password string
-	Db       int
+	config.Redis
 }
 
 func NewRedis(cfg Config) *redis.Client {

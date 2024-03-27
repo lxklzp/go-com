@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// 文件上传
-func upload(c *gin.Context) (map[string]interface{}, error) {
+// Upload 文件上传
+func Upload(c *gin.Context) (map[string]interface{}, error) {
 	var err error
 	// 创建上传文件夹
 	realPath := config.C.App.PublicPath
@@ -34,7 +34,6 @@ func upload(c *gin.Context) (map[string]interface{}, error) {
 	}
 
 	return map[string]interface{}{
-		"realPath":      realPath,
 		"relative_path": relativePath,
 		"size":          tool.FormatFileSize(f.Size),
 	}, nil

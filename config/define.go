@@ -42,7 +42,6 @@ var DefaultTimeMin Timestamp
 var DefaultTimeMax Timestamp
 var Trans ut.Translator
 var KafkaConsumeWorkerNumCh chan bool
-var DelayQueueConsumeWorkerNumCh chan bool
 
 func InitDefine() {
 	tm, _ := time.ParseInLocation(DateTimeFormatter, "1980-01-01 00:00:00", time.Local)
@@ -53,7 +52,6 @@ func InitDefine() {
 	Trans, _ = ut.New(en.New(), zh.New()).GetTranslator("zh")
 
 	KafkaConsumeWorkerNumCh = make(chan bool, C.App.MaxKafkaConsumeWorkerNum)
-	DelayQueueConsumeWorkerNumCh = make(chan bool, C.App.MaxDelayQueueConsumeWorkerNum)
 }
 
 type Timestamp time.Time
@@ -111,6 +109,7 @@ type RouterApi struct {
 }
 
 var RouterApiList []RouterApi
+var RouterApiWebList []RouterApi
 
 func camelToSepName(field string, sep rune) string {
 	var buffer []rune

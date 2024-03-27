@@ -93,7 +93,12 @@ func NewDbSimple(dialector gorm.Dialector) *gorm.DB {
 
 	// 连接数据库
 	db, err = gorm.Open(dialector, &gorm.Config{
-		Logger: newLogger,
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+		Logger:                                   newLogger,
+		SkipDefaultTransaction:                   true,
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		logr.L.Fatal(err)

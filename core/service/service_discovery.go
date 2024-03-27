@@ -8,9 +8,11 @@ import (
 	"go-com/core/logr"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 var SD serviceDiscovery
@@ -40,6 +42,7 @@ type SDService struct {
 	consistentHash *hash.ConsistentHash // 一致性哈希，存储服务器编号
 }
 
+// Registry 服务注册，服务提供方
 func (sd *serviceDiscovery) Registry(serviceName string, serverId string, ServerAddr string) {
 	// 创建和声明一个租约，并且设置ttl（60秒）
 	ctx := context.TODO()
@@ -78,7 +81,7 @@ func (sd *serviceDiscovery) Registry(serviceName string, serverId string, Server
 	logr.L.Errorf("etcd服务注册掉线：%v", server)
 }
 
-// Watch 维护服务、服务器信息
+// Watch 维护服务、服务器信息，服务使用方
 func (sd *serviceDiscovery) Watch(serviceNamePrefix string) {
 	ctx := context.TODO()
 
@@ -189,6 +192,24 @@ func (sd *serviceDiscovery) DiscoveryByConsistentHash(serviceName string, v inte
 				}
 			}
 		}
+	}
+	return ""
+}
+
+// DiscoveryByRoundRobin 服务发现 负载均衡：round-robin（轮询）
+func (sd *serviceDiscovery) DiscoveryByRoundRobin(serviceName string) string {
+	if tmp, ok := sd.cache.Load(serviceName); ok {
+		service := tmp.(*SDService)
+		var list []string
+		for _, server := range service.List {
+			list = append(list, server.serverId)
+		}
+		if len(list) == 0 {
+			return ""
+		}
+		sort.Strings(list)
+		atomic.AddInt64(&service.index, 1)
+		return list[service.index%int64(len(list))]
 	}
 	return ""
 }

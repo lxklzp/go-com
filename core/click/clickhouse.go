@@ -2,17 +2,14 @@ package click
 
 import (
 	"fmt"
+	"go-com/config"
 	"go-com/core/orm"
 	"gorm.io/driver/clickhouse"
 	"gorm.io/gorm"
 )
 
 type Config struct {
-	Addr     string
-	User     string
-	Password string
-	Dbname   string
-	orm.DbConfig
+	config.Clickhouse
 }
 
 func NewDb(cfg Config) *gorm.DB {
