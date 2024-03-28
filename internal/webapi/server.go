@@ -1,4 +1,4 @@
-package api
+package webapi
 
 import (
 	"bytes"
@@ -47,7 +47,7 @@ func Run(serv *http.Server) {
 
 	// 启动
 	serv = &http.Server{
-		Addr:    config.C.App.ApiAddr,
+		Addr:    config.C.App.WebApiAddr,
 		Handler: r,
 	}
 	if err := serv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

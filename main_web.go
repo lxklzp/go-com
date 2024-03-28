@@ -7,8 +7,8 @@ import (
 	"go-com/core/logr"
 	"go-com/core/pg"
 	"go-com/core/tool"
-	"go-com/internal/api"
 	"go-com/internal/app"
+	"go-com/internal/webapi"
 	"os"
 	"strconv"
 )
@@ -20,10 +20,10 @@ func main() {
 	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 
 	// 启动接口服务
-	api.Run(app.ServeApi)
+	webapi.Run(app.ServeApi)
 
 	tool.ExitNotify(func() {
-		api.Shutdown(app.ServeApi)
+		webapi.Shutdown(app.ServeApi)
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
