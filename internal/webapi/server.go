@@ -1,4 +1,4 @@
-package api
+package webapi
 
 import (
 	"bytes"
@@ -47,7 +47,7 @@ func Run(serv **http.Server) {
 
 	// 启动
 	*serv = &http.Server{
-		Addr:    config.C.App.ApiAddr,
+		Addr:    config.C.App.WebApiAddr,
 		Handler: r,
 	}
 	if err := (*serv).ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -102,6 +102,7 @@ func midGate(c *gin.Context) {
 		// 写入日志文件
 		logr.L.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)
 	}
+
 	// 验证请求是否来自网关
 	c.Next()
 }

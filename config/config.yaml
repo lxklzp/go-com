@@ -4,7 +4,7 @@ App:
   # 调试模式（日记级别：debug）
   DebugMode: true
   # 分布式
-  IsDistributed: false
+  IsDistributed: true
   # 1 开发环境（打印sql日志） 2 线上环境
   Environment: 1
   # 项目统一前缀
@@ -12,6 +12,8 @@ App:
   # 运行时的缓存文件目录 空表示：项目目录/runtime
   RuntimePath:
 
+  # 公网IP（用于外网机器人访问）
+  PublicIp: 192.168.2.70
   # api 地址
   ApiAddr: 0.0.0.0:9701
   # web_api 地址
@@ -23,6 +25,8 @@ App:
 
   # 网关token
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
+  # 网关地址
+  GatewayAddr: http://192.168.2.70:9080
   # 开放目录 空表示：项目目录/runtime/public
   PublicPath:
   # 文件上传大小限制 单位Mb
@@ -63,7 +67,16 @@ Mysql:
     MaxOpenConns: 200
     MaxIdleConns: 10
 
-RedisBot:
-  Addr: 192.168.2.70:6380
+Redis:
+  Addr: 192.168.2.70:6379
   Password: mypass
   Db: 0
+
+Etcd:
+  Addr:
+    - 192.168.2.70:12379
+  User: root
+  Password: mypass
+  CertFile:
+  KeyFile:
+  TrustedCAFile:

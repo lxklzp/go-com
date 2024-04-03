@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 )
+
+// 断路器算法sony/gobreaker实现示例
 
 var cb *gobreaker.CircuitBreaker
 

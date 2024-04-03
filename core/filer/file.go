@@ -158,6 +158,7 @@ func ReadLine(filename string, handler func(line string) error) error {
 	return nil
 }
 
+// CopyFile 复制文件（如果目标文件存在，会覆盖）
 func CopyFile(dstName, srcName string) error {
 	src, err := os.Open(srcName)
 	if err != nil {
