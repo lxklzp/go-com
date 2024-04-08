@@ -261,3 +261,18 @@ func FormatFileSize(size int64) string {
 		return fmt.Sprintf("%d B", size)
 	}
 }
+
+// SliceUnique 切片去重
+func SliceUnique[T int | string](array []T) []T {
+	m := make(map[T]struct{})
+	var ok bool
+	var result []T
+	for _, v := range array {
+		if _, ok = m[v]; ok {
+			continue
+		}
+		m[v] = struct{}{}
+		result = append(result, v)
+	}
+	return result
+}

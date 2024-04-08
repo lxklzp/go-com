@@ -31,6 +31,7 @@ type config struct {
 	Kafka      Kafka
 	Mysql      Mysql
 	Redis      Redis
+	Etcd       Etcd
 }
 
 type app struct {
@@ -41,12 +42,14 @@ type app struct {
 	Prefix        string
 	RuntimePath   string
 
+	PublicIp                 string
 	ApiAddr                  string
 	WebApiAddr               string
 	KafkaToLog               bool
 	MaxKafkaConsumeWorkerNum int32
 
 	GatewayToken       string
+	GatewayAddr        string
 	PublicPath         string
 	MaxMultipartMemory int64
 }
@@ -97,6 +100,15 @@ type Redis struct {
 	Addr     string
 	Password string
 	Db       int
+}
+
+type Etcd struct {
+	Addr          []string
+	User          string
+	Password      string
+	CertFile      string
+	KeyFile       string
+	TrustedCAFile string
 }
 
 // 将配置参数格式化为内存数据结构

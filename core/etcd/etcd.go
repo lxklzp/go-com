@@ -2,25 +2,15 @@ package etcd
 
 import (
 	"crypto/tls"
+	"go-com/config"
 	"go-com/core/logr"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"time"
 )
 
-var Etcd *clientv3.Client
-
 type Config struct {
-	Addr          []string
-	User          string
-	Password      string
-	CertFile      string
-	KeyFile       string
-	TrustedCAFile string
-}
-
-func InitEtcd(cfg Config) {
-	Etcd = NewEtcd(cfg)
+	config.Etcd
 }
 
 func NewEtcd(cfg Config) *clientv3.Client {
