@@ -6,7 +6,6 @@ import (
 	"go-com/config"
 	"go-com/core/dq"
 	"go-com/core/logr"
-	"time"
 )
 
 func main() {
@@ -17,15 +16,6 @@ func main() {
 	go q.Run(func(m dq.Message) {
 		fmt.Println(m)
 	})
-
-	for i := 0; i < 10000; i++ {
-		q.Produce(dq.Message{
-			Timestamp: time.Now().Unix(),
-			Topic:     "test",
-			No:        int64(i),
-			Data:      i,
-		})
-	}
 
 	//q.Produce(dq.Message{
 	//	Timestamp: time.Now().Unix(),

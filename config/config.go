@@ -48,12 +48,14 @@ type app struct {
 	KafkaToLog               bool
 	MaxKafkaConsumeWorkerNum int32
 
-	GatewayToken       string
-	GatewayAddr        string
-	PublicPath         string
-	MaxMultipartMemory int64
-	GrpcAddr           string
-	GrpcToken          string
+	GatewayToken            string
+	GatewayAddr             string
+	PublicPath              string
+	MaxMultipartMemory      int64
+	GrpcAddr                string
+	GrpcToken               string
+	DelayQueueConsumePeriod int
+	DelayQueuePersistPeriod int
 }
 
 type DbConfig struct {
