@@ -3,11 +3,13 @@
 ## 支持功能
 * gin
 * gorm
-* 配置
+* 配置（viper）
+* 服务注册发现（etcd）、负载均衡（轮询、一致性哈希）、令牌桶限流（time/rate）、断路器（sony）
+* 雪花算法
+* 延迟队列（container/heap，定时轮询消费、队列消息持久化）
+* grpc
 * 日志
 * 打包
-* 服务注册发现
-* 雪花算法
 
 ## 支持的数据类型
 * mysql、postgresql、clickhouse、nebula

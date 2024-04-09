@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"go-com/config"
-	"go-com/core/gw"
+	"go-com/core/giner"
 	"go-com/core/mod"
 	"go-com/core/tool"
 	"go-com/internal/app"
@@ -102,7 +102,7 @@ func (ctl hehe) ActionDel(c *gin.Context) interface{} {
 func (ctl hehe) ActionUpload(c *gin.Context) interface{} {
 	var result map[string]interface{}
 	var err error
-	if result, err = gw.Upload(c); err != nil {
+	if result, err = giner.Upload(c); err != nil {
 		return tool.RespData(500, err.Error(), nil)
 	}
 

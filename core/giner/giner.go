@@ -1,4 +1,4 @@
-package gw
+package giner
 
 import (
 	"github.com/gin-gonic/gin"
