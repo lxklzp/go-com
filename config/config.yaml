@@ -4,7 +4,7 @@ App:
   # 调试模式（日记级别：debug）
   DebugMode: true
   # 分布式
-  IsDistributed: true
+  IsDistributed: false
   # 1 开发环境（打印sql日志） 2 线上环境
   Environment: 1
   # 项目统一前缀
@@ -31,6 +31,10 @@ App:
   PublicPath:
   # 文件上传大小限制 单位Mb
   MaxMultipartMemory: 1024
+  # grpc访问地址
+  GrpcAddr: 0.0.0.0:9703
+  # grpc鉴权token
+  GrpcToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
 
 Postgresql:
   Host: 192.168.2.70

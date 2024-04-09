@@ -23,7 +23,7 @@ func main() {
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
 	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 	tool.ExitNotify(func() {
-		webapi.Shutdown(app.ServeApi)
+		webapi.Shutdown()
 	})
 
 	if config.C.App.IsDistributed {
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// 启动接口服务
-	webapi.Run(&app.ServeApi)
+	webapi.Run()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

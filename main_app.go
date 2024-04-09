@@ -12,7 +12,7 @@ import (
 	"go-com/core/tool"
 	"go-com/internal/api"
 	"go-com/internal/app"
-	"go-com/internal/webapi"
+	"go-com/internal/grpcs"
 	"os"
 	"strconv"
 	"strings"
@@ -24,7 +24,8 @@ func main() {
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
 	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 	tool.ExitNotify(func() {
-		webapi.Shutdown(app.ServeApi)
+		grpcs.Server.Stop()
+		api.Shutdown()
 	})
 
 	if config.C.App.IsDistributed {
@@ -34,12 +35,10 @@ func main() {
 		go app.SD.Registry("app", strconv.Itoa(int(config.C.App.Id)), url)
 	}
 
-	// 启动接口服务
-	api.Run(&app.ServeApi)
+	go grpcs.Server.Run()
 
-	tool.ExitNotify(func() {
-		api.Shutdown(app.ServeApi)
-	})
+	// 启动接口服务
+	api.Run()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

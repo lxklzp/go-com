@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+option go_package="./proto";
+
+// service、message、message的字段、rpc命名方式：小写字母下划线
+
+service app{
+  rpc hehe_add(hehe_req_data) returns(hehe_resp_data);
+}
+
+message hehe_req_data {
+  int64 id = 1;
+  string name = 2;
+  int32 age = 3;
+  int32 user_id = 4;
+}
+
+message hehe_resp_data {
+  int64 id = 1;
+}

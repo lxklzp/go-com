@@ -52,6 +52,8 @@ type app struct {
 	GatewayAddr        string
 	PublicPath         string
 	MaxMultipartMemory int64
+	GrpcAddr           string
+	GrpcToken          string
 }
 
 type DbConfig struct {
