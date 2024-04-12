@@ -18,10 +18,6 @@ App:
   ApiAddr: 0.0.0.0:9701
   # web_api 地址
   WebApiAddr: 0.0.0.0:9702
-  # kafka消费是否写入日志
-  KafkaToLog: true
-  # kafka最大消费者数目
-  MaxKafkaConsumeWorkerNum: 10
 
   # 网关token
   GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
@@ -63,6 +59,10 @@ Kafka:
   Group: test-group6
   SecurityProtocol:
   SaslMechanisms:
+  # kafka消费是否写入日志
+  IsLog: true
+  # kafka最大消费者数目
+  MaxConsumeWorkerNum: 10
 
 Mysql:
   Addr: 192.168.2.70:3306
@@ -88,3 +88,25 @@ Etcd:
   CertFile:
   KeyFile:
   TrustedCAFile:
+
+RateLimit:
+  # 桶中每秒产生token个数
+  Limit: 4
+  # 桶中token最大个数
+  Burst: 5
+  # 桶中token耗尽后等待刷新token时长，单位ms
+  Timeout: 3
+  # 桶外token存量最大个数
+  Stock: 5
+
+RateBreaker:
+  # 一个周期的时长，单位s
+  Interval: 300
+  # 打开到半开持续的时长，单位s
+  OpenTimeout: 60
+  # 最大请求次数：半开时，与Requests、ConsecutiveSuccesses比较
+  HafMaxRequests: 50
+  # 关闭到打开，一个周期内最小请求次数
+  CloseMinRequests: 5
+  # 关闭到打开，一个周期内错误百分比，单位%
+  CloseErrorPercent: 60

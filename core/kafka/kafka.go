@@ -13,14 +13,16 @@ type Config struct {
 }
 
 type Kafka struct {
-	Consumer *queue.Consumer
-	Producer *queue.Producer
-	cfgP     Config         // 生产者配置缓存
-	L        *logrus.Logger // 消费的消息日志，根据config.KafkaToLog判断是否写日志
+	Consumer           *queue.Consumer
+	Producer           *queue.Producer
+	cfgP               Config         // 生产者配置缓存
+	L                  *logrus.Logger // 消费的消息日志，根据config.Kafka.IsLog判断是否写日志
+	ConsumeWorkerNumCh chan bool
 }
 
 // InitConsumer offset：earliest、latest
 func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
+	kafka.ConsumeWorkerNumCh = make(chan bool, config.C.Kafka.MaxConsumeWorkerNum)
 	// 创建kafka消费者
 	var err error
 	cfgMap := queue.ConfigMap{
@@ -56,7 +58,7 @@ func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
 		logr.L.Fatal(err)
 	}
 	logr.L.Infof("[kafka] 消费者连接到kafka并订阅主题%s，等待消息...", cfg.Topic)
-	if config.C.App.KafkaToLog {
+	if config.C.Kafka.IsLog {
 		kafka.L = logr.NewLog("kafka_"+cfg.Topic, false)
 	}
 }
@@ -69,11 +71,11 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 
 	switch e := event.(type) {
 	case *queue.Message:
-		if config.C.App.KafkaToLog {
+		if config.C.Kafka.IsLog {
 			kafka.L.Infof("[%s] %s: %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Value))
 		}
 		// 处理消息
-		config.KafkaConsumeWorkerNumCh <- true
+		kafka.ConsumeWorkerNumCh <- true
 		go func() {
 			e := e
 			value := e.Value
@@ -82,7 +84,7 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 				if err := recover(); err != nil {
 					logr.L.Error(err)
 				}
-				<-config.KafkaConsumeWorkerNumCh
+				<-kafka.ConsumeWorkerNumCh
 
 				// 根据auto.commit.interval.ms配置自动提交消费者offset
 				_, err := kafka.Consumer.StoreMessage(e)

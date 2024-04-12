@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+// 延迟队列，支持生产、消费、定时持久化
+
 // Message 延迟队列里面的一条消息
 type Message struct {
 	Timestamp int64       // unix时间戳，到这个时间就出队

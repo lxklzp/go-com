@@ -41,7 +41,6 @@ const (
 var DefaultTimeMin Timestamp
 var DefaultTimeMax Timestamp
 var Trans ut.Translator
-var KafkaConsumeWorkerNumCh chan bool
 
 func InitDefine() {
 	tm, _ := time.ParseInLocation(DateTimeFormatter, "1980-01-01 00:00:00", time.Local)
@@ -50,8 +49,6 @@ func InitDefine() {
 	DefaultTimeMax = Timestamp(tm)
 
 	Trans, _ = ut.New(en.New(), zh.New()).GetTranslator("zh")
-
-	KafkaConsumeWorkerNumCh = make(chan bool, C.App.MaxKafkaConsumeWorkerNum)
 }
 
 type Timestamp time.Time

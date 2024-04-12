@@ -25,13 +25,15 @@ func init() {
 }
 
 type config struct {
-	App        app
-	Postgresql Postgresql
-	Clickhouse Clickhouse
-	Kafka      Kafka
-	Mysql      Mysql
-	Redis      Redis
-	Etcd       Etcd
+	App         app
+	Postgresql  Postgresql
+	Clickhouse  Clickhouse
+	Kafka       Kafka
+	Mysql       Mysql
+	Redis       Redis
+	Etcd        Etcd
+	RateLimit   RateLimit
+	RateBreaker RateBreaker
 }
 
 type app struct {
@@ -42,11 +44,9 @@ type app struct {
 	Prefix        string
 	RuntimePath   string
 
-	PublicIp                 string
-	ApiAddr                  string
-	WebApiAddr               string
-	KafkaToLog               bool
-	MaxKafkaConsumeWorkerNum int32
+	PublicIp   string
+	ApiAddr    string
+	WebApiAddr string
 
 	GatewayToken            string
 	GatewayAddr             string
@@ -90,6 +90,9 @@ type Kafka struct {
 	Group            string
 	SecurityProtocol string
 	SaslMechanisms   string
+
+	IsLog               bool
+	MaxConsumeWorkerNum int32
 }
 
 type Mysql struct {
@@ -113,6 +116,21 @@ type Etcd struct {
 	CertFile      string
 	KeyFile       string
 	TrustedCAFile string
+}
+
+type RateLimit struct {
+	Limit   int
+	Burst   int
+	Timeout int
+	Stock   int
+}
+
+type RateBreaker struct {
+	Interval          int
+	OpenTimeout       int
+	HafMaxRequests    uint32
+	CloseMinRequests  uint32
+	CloseErrorPercent uint32
 }
 
 // 将配置参数格式化为内存数据结构
