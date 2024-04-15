@@ -95,18 +95,18 @@ RateLimit:
   # 桶中token最大个数
   Burst: 5
   # 桶中token耗尽后等待刷新token时长，单位ms
-  Timeout: 3
+  Timeout: 1000
   # 桶外token存量最大个数
-  Stock: 5
+  MaxStock: 10
 
 RateBreaker:
   # 一个周期的时长，单位s
   Interval: 300
   # 打开到半开持续的时长，单位s
-  OpenTimeout: 60
+  OpenTimeout: 10
   # 最大请求次数：半开时，与Requests、ConsecutiveSuccesses比较
   HafMaxRequests: 50
   # 关闭到打开，一个周期内最小请求次数
   CloseMinRequests: 5
   # 关闭到打开，一个周期内错误百分比，单位%
-  CloseErrorPercent: 60
+  CloseErrorPercent: 30

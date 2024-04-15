@@ -119,10 +119,10 @@ type Etcd struct {
 }
 
 type RateLimit struct {
-	Limit   int
-	Burst   int
-	Timeout int
-	Stock   int
+	Limit    int
+	Burst    int
+	Timeout  int32
+	MaxStock int32
 }
 
 type RateBreaker struct {

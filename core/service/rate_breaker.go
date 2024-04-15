@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// 熔断器，错误比例熔断策略
+// 熔断器，错误比例熔断策略，支持动态更新配置参数
 //
 // 使用github.com/sony/gobreaker实现的熔断器，因子：
 // 状态 state：关闭、半开、打开
@@ -28,8 +28,7 @@ type RateBreakerConfig struct {
 }
 
 type RateBreaker struct {
-	cfg RateBreakerConfig
-	cb  *gobreaker.CircuitBreaker
+	cb *gobreaker.CircuitBreaker
 }
 
 func NewRateBreaker(cfg RateBreakerConfig) *RateBreaker {
@@ -44,8 +43,7 @@ func NewRateBreaker(cfg RateBreakerConfig) *RateBreaker {
 		},
 	}
 	rb := &RateBreaker{
-		cfg: cfg,
-		cb:  gobreaker.NewCircuitBreaker(st),
+		cb: gobreaker.NewCircuitBreaker(st),
 	}
 	return rb
 }
