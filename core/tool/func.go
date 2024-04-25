@@ -144,7 +144,7 @@ func httpReqResp(req *http.Request, url string, param interface{}) ([]byte, erro
 	if err != nil {
 		return nil, err
 	} else if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("服务器异常，响应码：" + strconv.Itoa(resp.StatusCode))
+		return result, errors.New("服务器异常，响应码：" + strconv.Itoa(resp.StatusCode))
 	} else {
 		return result, nil
 	}
@@ -225,8 +225,8 @@ func RandString(n int) string {
 	return string(b)
 }
 
-// InArrayStr 值在切片中是否存在
-func InArrayStr(list []string, value string) bool {
+// InArray 值在切片中是否存在
+func InArray[T int | string](list []T, value T) bool {
 	if list == nil {
 		return false
 	}
@@ -238,9 +238,9 @@ func InArrayStr(list []string, value string) bool {
 	return false
 }
 
-// IntersectStr 求map[string]bool的交集
-func IntersectStr(a map[string]bool, b map[string]bool) map[string]bool {
-	res := make(map[string]bool)
+// Intersect 求map[T]bool的交集
+func Intersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
+	res := make(map[T]bool)
 	for v := range a {
 		if _, ok := b[v]; ok {
 			res[v] = true
