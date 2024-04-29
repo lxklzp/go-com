@@ -147,9 +147,18 @@ func decode() {
 
 // Load 加载配置文件
 func Load() {
+	// 通过启动指令配置
+	var id int64
+	var configFile string
+	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径")
+	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023")
+	flag.Parse()
+
 	v := viper.New()
 	configPath := Root + "config"
-	configFile := configPath + "/config.yaml"
+	if configFile == "" {
+		configFile = configPath + "/config.yaml"
+	}
 	v.SetConfigFile(configFile)
 	viper.AddConfigPath(configPath)
 	if err := v.ReadInConfig(); err != nil {
@@ -161,10 +170,6 @@ func Load() {
 
 	decode()
 
-	// 通过启动指令配置
-	var id int64
-	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023")
-	flag.Parse()
 	if id > 0 {
 		C.App.Id = id
 	}
