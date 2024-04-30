@@ -225,30 +225,6 @@ func RandString(n int) string {
 	return string(b)
 }
 
-// InArray 值在切片中是否存在
-func InArray[T int | string](list []T, value T) bool {
-	if list == nil {
-		return false
-	}
-	for _, item := range list {
-		if item == value {
-			return true
-		}
-	}
-	return false
-}
-
-// Intersect 求map[T]bool的交集
-func Intersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
-	res := make(map[T]bool)
-	for v := range a {
-		if _, ok := b[v]; ok {
-			res[v] = true
-		}
-	}
-	return res
-}
-
 // FormatFileSize 格式化文件大小
 func FormatFileSize(size int64) string {
 	if size >= config.GB {
@@ -260,6 +236,39 @@ func FormatFileSize(size int64) string {
 	} else {
 		return fmt.Sprintf("%d B", size)
 	}
+}
+
+// SearchJsonByKeysRecursive 在json数据中递归查找指定键名相同的所有数据
+func SearchJsonByKeysRecursive(object interface{}, key []string, handler func(object map[string]interface{}, key string)) {
+	switch object.(type) {
+	case []interface{}:
+		object := object.([]interface{})
+		for _, sub := range object {
+			SearchJsonByKeysRecursive(sub, key, handler)
+		}
+	case map[string]interface{}:
+		object := object.(map[string]interface{})
+		for k, sub := range object {
+			if SliceHas(key, k) {
+				handler(object, k)
+			} else {
+				SearchJsonByKeysRecursive(sub, key, handler)
+			}
+		}
+	}
+}
+
+// SliceHas 值在切片中是否存在
+func SliceHas[T int | string](list []T, value T) bool {
+	if list == nil {
+		return false
+	}
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }
 
 // SliceUnique 切片去重
@@ -275,4 +284,41 @@ func SliceUnique[T int | string](array []T) []T {
 		result = append(result, v)
 	}
 	return result
+}
+
+// SliceRemoveValue 按值删除切片元素
+func SliceRemoveValue[T int | float64 | string](array []T, val T) []T {
+	if len(array) == 0 {
+		return array
+	}
+	var result []T
+	for _, v := range array {
+		if v != val {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// SliceAvg 求平均值
+func SliceAvg[T int | float64](array []T) T {
+	if len(array) == 0 {
+		return T(0)
+	}
+	var sum T
+	for _, v := range array {
+		sum += v
+	}
+	return sum / T(len(array))
+}
+
+// MapIntersect 求map[T]bool的交集
+func MapIntersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
+	res := make(map[T]bool)
+	for v := range a {
+		if _, ok := b[v]; ok {
+			res[v] = true
+		}
+	}
+	return res
 }

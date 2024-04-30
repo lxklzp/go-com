@@ -6,6 +6,7 @@ import (
 	"go-com/config"
 	"go-com/core/filer"
 	"go-com/core/logr"
+	"go-com/core/tool"
 	"log"
 	"os"
 	"sync"
@@ -14,11 +15,15 @@ import (
 
 // 延迟队列，支持生产、消费、定时持久化
 
+type Config struct {
+	config.Dq
+}
+
 // Message 延迟队列里面的一条消息
 type Message struct {
 	Timestamp int64       // unix时间戳，到这个时间就出队
 	Topic     string      // 主题，区分不同类型的消息
-	No        int64       // 消息唯一编号
+	No        string      // 消息唯一编号
 	Data      interface{} // 消息数据
 }
 
@@ -27,6 +32,7 @@ type Queue struct {
 	list     []Message
 	lock     sync.Mutex
 	filename string // 持久化文件名
+
 }
 
 /*---------- container/heap的实现 ----------*/
@@ -64,14 +70,22 @@ func NewQueue() *Queue {
 	return q
 }
 
-func (q *Queue) Produce(m Message) {
+func (q *Queue) Produce(msg Message) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	heap.Push(q, m)
+	if config.C.Dq.NoExist {
+		for _, m := range q.list {
+			if m.No == msg.No {
+				return
+			}
+		}
+	}
+
+	heap.Push(q, msg)
 }
 
-func (q *Queue) consume(handler func(m Message)) {
+func (q *Queue) Consume(handler func(msg Message)) {
 	for {
 		q.lock.Lock()
 		if q.Len() == 0 {
@@ -91,10 +105,10 @@ func (q *Queue) consume(handler func(m Message)) {
 	}
 }
 
-func (q *Queue) Run(handler func(m Message)) {
+func (q *Queue) Run(handler func(msg Message)) {
 	var err error
 	// 载入持久化文件
-	if filer.Exist(q.filename) {
+	if config.C.Dq.PersistPeriod > 0 && filer.Exist(q.filename) {
 		listJson, _ := os.ReadFile(q.filename)
 		if err = json.Unmarshal(listJson, &q.list); err != nil {
 			logr.L.Fatal(err)
@@ -102,30 +116,40 @@ func (q *Queue) Run(handler func(m Message)) {
 	}
 
 	go q.loopConsume(handler)
-	if config.C.App.DelayQueuePersistPeriod > 0 {
+	if config.C.Dq.PersistPeriod > 0 {
 		go q.loopPersist()
 	}
 }
 
+func (q *Queue) Persist() {
+	var err error
+	q.lock.Lock()
+	listJson, _ := json.Marshal(q.list)
+	q.lock.Unlock()
+	if err = os.WriteFile(q.filename, listJson, 0755); err != nil {
+		logr.L.Error(err)
+	}
+}
+
 // 轮询消费
-func (q *Queue) loopConsume(handler func(m Message)) {
-	ticker := time.NewTicker(time.Second * time.Duration(config.C.App.DelayQueueConsumePeriod))
+func (q *Queue) loopConsume(handler func(msg Message)) {
+	ticker := time.NewTicker(time.Second * time.Duration(config.C.Dq.ConsumePeriod))
 	defer func() {
 		if err := recover(); err != nil {
-			logr.L.Error(err)
+			logr.L.Error(tool.ErrorStack(err))
 		}
 		ticker.Stop()
 		go q.loopConsume(handler)
 	}()
 
 	for range ticker.C {
-		q.consume(handler)
+		q.Consume(handler)
 	}
 }
 
 // 轮询持久化
 func (q *Queue) loopPersist() {
-	ticker := time.NewTicker(time.Second * time.Duration(config.C.App.DelayQueuePersistPeriod))
+	ticker := time.NewTicker(time.Second * time.Duration(config.C.Dq.PersistPeriod))
 	defer func() {
 		if err := recover(); err != nil {
 			logr.L.Error(err)
@@ -134,14 +158,7 @@ func (q *Queue) loopPersist() {
 		go q.loopPersist()
 	}()
 
-	var err error
-	var listJson []byte
 	for range ticker.C {
-		q.lock.Lock()
-		listJson, _ = json.Marshal(q.list)
-		q.lock.Unlock()
-		if err = os.WriteFile(q.filename, listJson, 0755); err != nil {
-			logr.L.Error(err)
-		}
+		q.Persist()
 	}
 }

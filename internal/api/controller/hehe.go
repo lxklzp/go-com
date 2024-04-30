@@ -15,8 +15,6 @@ import (
 type hehe struct {
 }
 
-func InitController() {}
-
 func init() {
 	config.AddRouterApi(hehe{}, &config.RouterApiList)
 }

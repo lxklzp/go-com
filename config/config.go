@@ -34,6 +34,7 @@ type config struct {
 	Etcd        Etcd
 	RateLimit   RateLimit
 	RateBreaker RateBreaker
+	Dq          Dq
 }
 
 type app struct {
@@ -133,6 +134,12 @@ type RateBreaker struct {
 	CloseErrorPercent uint32
 }
 
+type Dq struct {
+	ConsumePeriod int
+	PersistPeriod int
+	NoExist       bool
+}
+
 // 将配置参数格式化为内存数据结构
 func decode() {
 	InitDefine()
@@ -150,7 +157,7 @@ func Load() {
 	// 通过启动指令配置
 	var id int64
 	var configFile string
-	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径")
+	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径") // -config=/data/go-com/config/config.yaml
 	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023")
 	flag.Parse()
 
