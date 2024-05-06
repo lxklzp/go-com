@@ -5,6 +5,7 @@ import (
 	"go-com/config"
 	"go-com/core/hash"
 	"go-com/core/logr"
+	"go-com/core/tool"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"sort"
@@ -65,7 +66,7 @@ func (sd *Discovery) Registry(serviceName string, serverId string, ServerAddr st
 
 	defer func() {
 		if err := recover(); err != nil {
-			logr.L.Error(err)
+			logr.L.Error(tool.ErrorStack(err))
 		}
 		lease.Close()
 		sd.Registry(serviceName, serverId, ServerAddr)

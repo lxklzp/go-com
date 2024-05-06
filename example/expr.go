@@ -8,8 +8,7 @@ import (
 
 func Expr() {
 	// 表达式引擎示例
-	exprCode := `let v = 10;
-v > 30 ? 3 : (v > 20 ? 2 : (v > 10 ? 1 : 0))`
+	exprCode := `v >= 3.561472e+06 ? 3 : (v > 3.561472e+06 ? 2 : (v == 3.561472e+06 ? 1 : 0))`
 	logr.L.Debug(exprCode)
 	program, err := expr.Compile(exprCode)
 	if err != nil {

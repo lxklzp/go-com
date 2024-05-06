@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go-com/config"
 	"go-com/core/logr"
+	"go-com/core/tool"
 	"time"
 )
 
@@ -82,7 +83,7 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 			timestamp := e.Timestamp
 			defer func() {
 				if err := recover(); err != nil {
-					logr.L.Error(err)
+					logr.L.Error(tool.ErrorStack(err))
 				}
 				<-kafka.ConsumeWorkerNumCh
 
