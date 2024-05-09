@@ -20,7 +20,7 @@ func main() {
 	reload := true // 是否完全重新打包
 	buildPath := root + "runtime/build_app/"
 	program := "main_app"
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("CGO_ENABLED=0 go build -o %s %s", root+program, root+"main_app.go"))
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("go build -o %s %s", root+program, root+"main_app.go"))
 	fileList := []string{
 		program,
 		"config/config.yaml",

@@ -3,36 +3,29 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/expr-lang/expr"
 	"go-com/config"
+	"go-com/core/kafka"
 	"go-com/core/logr"
-	"go-com/core/pg"
-	"go-com/internal/app"
+	"time"
 )
 
 func main() {
 	config.Load()
 	logr.InitLog("web")
-	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
+	k := kafka.Kafka{}
+	//k.InitProducer(kafka.Config{Kafka: config.C.Kafka})
+	//
+	//k.Produce([]byte("hello 你好2"))
+	//k.Produce([]byte("hello 你好3"))
+	//k.Produce([]byte("hello 你好4"))
+	//k.CloseProducer()
 
-	c := 2.561472e+06
-	fmt.Printf("%f\n", c)
-
-	// 表达式引擎示例
-	exprCode := `let v = 2561473;
-v >= 3.561472e+06 ? 3 : (v > 2.561472e+06 ? 2 : (v == 3.561472e+06 ? 1 : 0))`
-	logr.L.Debug(exprCode)
-	program, err := expr.Compile(exprCode)
-	if err != nil {
-		logr.L.Error(err)
-		return
+	k.InitConsumer(kafka.Config{Kafka: config.C.Kafka}, "earliest")
+	for {
+		k.Consume(func(msg []byte, timestamp *time.Time) {
+			fmt.Println(string(msg))
+		})
 	}
-	output, err := expr.Run(program, nil)
-	if err != nil {
-		logr.L.Error(err)
-		return
-	}
-	fmt.Println(output)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

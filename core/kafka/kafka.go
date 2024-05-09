@@ -112,8 +112,14 @@ func (kafka *Kafka) InitProducer(cfg Config) {
 		"bootstrap.servers": cfg.Servers,
 	}
 	if cfg.Username != "" {
-		cfgMap["security.protocol"] = "SASL_PLAINTEXT"
-		cfgMap["sasl.mechanisms"] = "SCRAM-SHA-512"
+		cfgMap["security.protocol"] = cfg.SecurityProtocol
+		if cfgMap["security.protocol"] == "" {
+			cfgMap["security.protocol"] = "SASL_PLAINTEXT"
+		}
+		cfgMap["sasl.mechanisms"] = cfg.SaslMechanisms
+		if cfgMap["sasl.mechanisms"] == "" {
+			cfgMap["sasl.mechanisms"] = "PLAIN"
+		}
 		cfgMap["sasl.username"] = cfg.Username
 		cfgMap["sasl.password"] = cfg.Password
 	}
