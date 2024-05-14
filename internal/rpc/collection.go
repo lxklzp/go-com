@@ -21,7 +21,12 @@ type acquisitionRespData[T interface{} | DeviceRaw] struct {
 }
 
 func CollectionPost[T interface{} | DeviceRaw](url string, param interface{}, respData acquisitionRespData[T]) (T, error) {
-	bsBuf := bytes.NewBuffer([]byte{})
+	bsBuf := reqBufPool.Get().(*bytes.Buffer)
+	defer func() {
+		bsBuf.Reset()
+		reqBufPool.Put(bsBuf)
+	}()
+
 	encoder := json.NewEncoder(bsBuf)
 	encoder.SetEscapeHTML(false)
 	encoder.Encode(param)
