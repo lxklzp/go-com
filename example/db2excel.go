@@ -14,7 +14,7 @@ import (
 
 func main() {
 	config.Load()
-	logr.InitLog("test")
+	logr.InitLog("example")
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
 
 	// 1 名称 标题

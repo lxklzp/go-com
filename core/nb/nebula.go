@@ -2,15 +2,12 @@ package nb
 
 import (
 	nebula "github.com/vesoft-inc/nebula-go/v3"
+	"go-com/config"
 	"go-com/core/logr"
 )
 
 type Config struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Dbname   string
+	config.Nebula
 }
 
 func NewNebula(cfg Config) *nebula.SessionPool {

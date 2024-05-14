@@ -10,7 +10,7 @@ import (
 
 func main() {
 	config.Load()
-	logr.InitLog("test")
+	logr.InitLog("example")
 
 	rl := service.NewRateLimit(service.RateLimitConfig{RateLimit: config.C.RateLimit})
 

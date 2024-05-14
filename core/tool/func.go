@@ -258,6 +258,14 @@ func SearchJsonByKeysRecursive(object interface{}, key []string, handler func(ob
 	}
 }
 
+// FormatStandardTime 格式化标准时间字符串
+func FormatStandardTime(t string) string {
+	if len(t) < 19 {
+		return t
+	}
+	return strings.Replace(t, "T", " ", 1)[:19]
+}
+
 // SliceHas 值在切片中是否存在
 func SliceHas[T int | string](list []T, value T) bool {
 	if list == nil {

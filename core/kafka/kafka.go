@@ -17,13 +17,15 @@ type Kafka struct {
 	Consumer           *queue.Consumer
 	Producer           *queue.Producer
 	cfgP               Config         // 生产者配置缓存
+	cfgC               Config         // 消费者配置缓存
 	L                  *logrus.Logger // 消费的消息日志，根据config.Kafka.IsLog判断是否写日志
 	ConsumeWorkerNumCh chan bool
 }
 
 // InitConsumer offset：earliest、latest
 func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
-	kafka.ConsumeWorkerNumCh = make(chan bool, config.C.Kafka.MaxConsumeWorkerNum)
+	kafka.cfgC = cfg
+	kafka.ConsumeWorkerNumCh = make(chan bool, cfg.MaxConsumeWorkerNum)
 	// 创建kafka消费者
 	var err error
 	cfgMap := queue.ConfigMap{
@@ -59,12 +61,12 @@ func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
 		logr.L.Fatal(err)
 	}
 	logr.L.Infof("[kafka] 消费者连接到kafka并订阅主题%s，等待消息...", cfg.Topic)
-	if config.C.Kafka.IsLog {
+	if cfg.IsLog {
 		kafka.L = logr.NewLog("kafka_"+cfg.Topic, false)
 	}
 }
 
-func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
+func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time.Time)) {
 	event := kafka.Consumer.Poll(1000) // 阻塞1秒
 	if event == nil {
 		return
@@ -72,13 +74,14 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 
 	switch e := event.(type) {
 	case *queue.Message:
-		if config.C.Kafka.IsLog {
+		if kafka.cfgC.IsLog {
 			kafka.L.Infof("[%s] %s: %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Value))
 		}
 		// 处理消息
 		kafka.ConsumeWorkerNumCh <- true
 		go func() {
 			e := e
+			key := e.Key
 			value := e.Value
 			timestamp := e.Timestamp
 			defer func() {
@@ -93,7 +96,7 @@ func (kafka *Kafka) Consume(handler func(msg []byte, timestamp *time.Time)) {
 					logr.L.Errorf("[kafka] 消费者 StoreMessage错误 %+v", err)
 				}
 			}()
-			handler(value, &timestamp)
+			handler(key, value, &timestamp)
 		}()
 	case queue.Error:
 		logr.L.Errorf("[kafka] 消费者 错误 %+v", e)
@@ -131,7 +134,7 @@ func (kafka *Kafka) InitProducer(cfg Config) {
 	}
 }
 
-func (kafka *Kafka) Produce(data []byte) {
+func (kafka *Kafka) Produce(key []byte, data []byte, topic string) {
 	var err error
 	// Delivery report handler for produced messages
 	go func() {
@@ -148,10 +151,13 @@ func (kafka *Kafka) Produce(data []byte) {
 	}()
 
 	// Produce messages to topic (asynchronously)
-	topic := kafka.cfgP.Topic
+	if topic == "" {
+		topic = kafka.cfgP.Topic
+	}
 	for {
 		err = kafka.Producer.Produce(&queue.Message{
 			TopicPartition: queue.TopicPartition{Topic: &topic, Partition: queue.PartitionAny},
+			Key:            key,
 			Value:          data,
 		}, nil)
 		if err != nil {

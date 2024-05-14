@@ -12,7 +12,7 @@ import (
 
 func main() {
 	config.Load()
-	logr.InitLog("test")
+	logr.InitLog("example")
 
 	rb := service.NewRateBreaker(service.RateBreakerConfig{RateBreaker: config.C.RateBreaker})
 	for i := 0; i < 1000; i++ {

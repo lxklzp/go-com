@@ -1,33 +1,21 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"go-com/config"
-	"go-com/core/kafka"
 	"go-com/core/logr"
-	"time"
+	"go-com/core/nb"
+	"go-com/internal/app"
 )
 
 func main() {
 	config.Load()
-	logr.InitLog("web")
-	k := kafka.Kafka{}
-	//k.InitProducer(kafka.Config{Kafka: config.C.Kafka})
-	//
-	//k.Produce([]byte("hello 你好2"))
-	//k.Produce([]byte("hello 你好3"))
-	//k.Produce([]byte("hello 你好4"))
-	//k.CloseProducer()
-
-	k.InitConsumer(kafka.Config{Kafka: config.C.Kafka}, "earliest")
-	for {
-		k.Consume(func(msg []byte, timestamp *time.Time) {
-			fmt.Println(string(msg))
-		})
+	logr.InitLog("test")
+	app.Nb = nb.NewNebula(nb.Config{Nebula: config.C.Nebula})
+	res, err := app.Nb.Execute("MATCH ()-[e]->() RETURN e limit 100;")
+	if err != nil {
+		fmt.Println(err)
 	}
+	fmt.Println(res.GetRows()[0])
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	<-ctx.Done()
 }

@@ -10,7 +10,7 @@ import (
 
 func main() {
 	config.Load()
-	logr.InitLog("test")
+	logr.InitLog("example")
 
 	q := dq.NewQueue()
 	go q.Run(func(m dq.Message) {

@@ -32,6 +32,7 @@ type config struct {
 	Mysql       Mysql
 	Redis       Redis
 	Etcd        Etcd
+	Nebula      Nebula
 	RateLimit   RateLimit
 	RateBreaker RateBreaker
 	Dq          Dq
@@ -117,6 +118,14 @@ type Etcd struct {
 	CertFile      string
 	KeyFile       string
 	TrustedCAFile string
+}
+
+type Nebula struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Dbname   string
 }
 
 type RateLimit struct {
