@@ -1,8 +1,10 @@
 package app
 
 import (
+	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/go-redis/redis/v8"
 	nebula "github.com/vesoft-inc/nebula-go/v3"
+	"go-com/core/kafka"
 	"go-com/core/service"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"gorm.io/gorm"
@@ -17,3 +19,6 @@ var Etcd *clientv3.Client
 var Nb *nebula.SessionPool
 var SD *service.Discovery
 var ProxyVmc *httputil.ReverseProxy
+var Es *elasticsearch.Client
+var KafkaP kafka.Kafka
+var KafkaCQ kafka.Kafka

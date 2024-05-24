@@ -92,6 +92,15 @@ Nebula:
   Password: 123456
   Dbname: tyhd_net
 
+Es:
+  Addr:
+    - http://127.0.0.1:29042
+  User: elastic
+  Password: e49S^cQG7m
+  DbConfig:
+    MaxOpenConns: 200
+    MaxIdleConns: 10
+
 RateLimit:
   # 桶中每秒产生token个数
   Limit: 4
@@ -117,7 +126,9 @@ RateBreaker:
 Dq:
   # 延迟队列消费轮询周期，单位s
   ConsumePeriod: 10
-  # 延迟队列持久化轮询周期，单位s，0表示不持久化
+  # 延迟队列持久化轮询周期，单位s
   PersistPeriod: 0
+  # 最大并行数目，0表示串行
+  MaxWorkerNum: 100
   # 是否判断消息的no是否存在
   CheckNoExist: true

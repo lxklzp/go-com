@@ -1,21 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go-com/config"
 	"go-com/core/logr"
-	"go-com/core/nb"
+	"go-com/core/rds"
 	"go-com/internal/app"
 )
 
 func main() {
 	config.Load()
 	logr.InitLog("test")
-	app.Nb = nb.NewNebula(nb.Config{Nebula: config.C.Nebula})
-	res, err := app.Nb.Execute("MATCH ()-[e]->() RETURN e limit 100;")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(res.GetRows()[0])
-
+	app.Redis = rds.NewRedis(rds.Config{Redis: config.C.Redis})
+	fmt.Println(app.Redis.Info(context.TODO()).String())
 }

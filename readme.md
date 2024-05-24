@@ -15,6 +15,6 @@
 
 ## 支持的数据类型
 * mysql、postgresql、clickhouse、nebula
-* kafka、rabbitmq、redis、etcd
+* kafka、rabbitmq、redis、etcd、elasticsearch
 * excel、csv、zip、file
 * tcp、upd、email

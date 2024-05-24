@@ -146,7 +146,15 @@ type RateBreaker struct {
 type Dq struct {
 	ConsumePeriod int
 	PersistPeriod int
-	NoExist       bool
+	MaxWorkerNum  int32
+	CheckNoExist  bool
+}
+
+type Es struct {
+	Addr     []string
+	User     string
+	Password string
+	DbConfig DbConfig
 }
 
 // 将配置参数格式化为内存数据结构

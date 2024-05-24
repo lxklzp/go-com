@@ -17,8 +17,8 @@ const MaxPageRead = 5000
 const MaxPageWrite = 200
 
 type Base struct {
-	TimeFrom string `gorm:"-"`
-	TimeTo   string `gorm:"-"`
+	TimeFrom string `gorm:"-" json:"time_from"`
+	TimeTo   string `gorm:"-" json:"time_to"`
 	Page     int    `gorm:"-" json:"pageNo"`
 	PageSize int    `gorm:"-" json:"pageSize"`
 }

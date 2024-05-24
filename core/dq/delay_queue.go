@@ -29,10 +29,10 @@ type Message struct {
 
 // Queue 队列
 type Queue struct {
-	list     []Message
-	lock     sync.Mutex
-	filename string // 持久化文件名
-
+	list        []Message
+	lock        sync.Mutex
+	filename    string // 持久化文件名
+	workerNumCh chan bool
 }
 
 /*---------- container/heap的实现 ----------*/
@@ -62,9 +62,10 @@ func NewQueue() *Queue {
 	filename := path + "/list.json"
 
 	q := &Queue{
-		list:     []Message{},
-		lock:     sync.Mutex{},
-		filename: filename,
+		list:        []Message{},
+		lock:        sync.Mutex{},
+		filename:    filename,
+		workerNumCh: make(chan bool, config.C.Dq.MaxWorkerNum),
 	}
 	heap.Init(q)
 	return q
@@ -74,7 +75,7 @@ func (q *Queue) Produce(msg Message) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	if config.C.Dq.NoExist {
+	if config.C.Dq.CheckNoExist {
 		for _, m := range q.list {
 			if m.No == msg.No {
 				return
@@ -95,7 +96,22 @@ func (q *Queue) Consume(handler func(msg Message)) {
 		m := heap.Pop(q).(Message)
 		q.lock.Unlock()
 		if m.Timestamp <= time.Now().Unix() {
-			handler(m)
+			if config.C.Dq.MaxWorkerNum == 0 {
+				// 0表示串行
+				handler(m)
+			} else {
+				// 并行
+				q.workerNumCh <- true
+				go func() {
+					defer func() {
+						if err := recover(); err != nil {
+							logr.L.Error(tool.ErrorStack(err))
+						}
+						<-q.workerNumCh
+					}()
+					handler(m)
+				}()
+			}
 		} else {
 			q.lock.Lock()
 			heap.Push(q, m)
