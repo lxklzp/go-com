@@ -14,21 +14,12 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
-
-var reqBufPool *sync.Pool
 
 var ServApi *http.Server
 
 func Run() {
-	reqBufPool = &sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 0, 4096))
-		},
-	}
-
 	// 表单验证错误信息的中文翻译
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		if err := zhTrans.RegisterDefaultTranslations(v, config.Trans); err != nil {
@@ -90,7 +81,7 @@ func midGate(c *gin.Context) {
 			header += fmt.Sprintf("%s:%s\n", k, strings.Join(v, " "))
 		}
 		// 请求body
-		buffer := reqBufPool.Get().(*bytes.Buffer)
+		buffer := config.BufPool.Get().(*bytes.Buffer)
 		_, err := io.Copy(buffer, c.Request.Body)
 		if err != nil {
 			logr.L.Warn(err)
@@ -99,7 +90,7 @@ func midGate(c *gin.Context) {
 		body = buffer.String()
 		defer func() {
 			buffer.Reset()
-			reqBufPool.Put(buffer)
+			config.BufPool.Put(buffer)
 		}()
 		// 写入日志文件
 		logr.L.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 	"gorm.io/gorm/schema"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 )
@@ -40,7 +42,10 @@ const (
 
 var DefaultTimeMin Timestamp
 var DefaultTimeMax Timestamp
+
 var Trans ut.Translator
+
+var BufPool *sync.Pool // bytes.Buffer 缓存池
 
 func InitDefine() {
 	tm, _ := time.ParseInLocation(DateTimeFormatter, "1980-01-01 00:00:00", time.Local)
@@ -49,6 +54,12 @@ func InitDefine() {
 	DefaultTimeMax = Timestamp(tm)
 
 	Trans, _ = ut.New(en.New(), zh.New()).GetTranslator("zh")
+
+	BufPool = &sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 4096))
+		},
+	}
 }
 
 type Timestamp time.Time

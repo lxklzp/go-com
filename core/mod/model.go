@@ -120,7 +120,7 @@ type ExcelReadTable struct {
 	List  interface{}
 }
 
-// ExcelExport 导出成excel
+// ExcelExport 导出成excel，注意是单excel文件
 func ExcelExport(name string, title []interface{}, readTable func(page int, pageSize int, isCount bool) ExcelReadTable, streamWrite func(stream *excelize.StreamWriter, table ExcelReadTable, rowNext *int)) (string, error) {
 	// 初始化excel和写入流
 	f := excelize.NewFile()
@@ -177,34 +177,4 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 	}
 
 	return "/export" + relativePath, nil
-}
-
-// SlicePage 切片分页
-type SlicePage struct {
-	totalCount int64
-	page       int64
-	pageSize   int64
-	From       int64
-	To         int64
-}
-
-func NewSlicePage(totalCount int64, pageSize int64) *SlicePage {
-	var sp SlicePage
-	sp.totalCount = totalCount
-	sp.pageSize = pageSize
-	return &sp
-}
-
-func (sp *SlicePage) Next() bool {
-	if sp.To >= sp.totalCount {
-		return false
-	}
-	sp.From = sp.page * sp.pageSize
-	sp.page++
-	if sp.totalCount <= sp.page*sp.pageSize {
-		sp.To = sp.totalCount
-	} else {
-		sp.To = sp.page * sp.pageSize
-	}
-	return true
 }
