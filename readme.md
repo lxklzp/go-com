@@ -13,7 +13,7 @@
 * 日志（sirupsen/logrus）
 * 打包
 
-## 支持的数据类型
+## 支持的数据存储与交互类型
 * mysql、postgresql、clickhouse、nebula
 * kafka、rabbitmq、redis、etcd、elasticsearch
 * excel、csv、zip、file
