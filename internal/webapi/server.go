@@ -35,7 +35,7 @@ func Run() {
 	r.MaxMultipartMemory = config.C.App.MaxMultipartMemory // 设置最大上传文件
 	// 设置静态目录
 	r.Static("/html", config.Root+"html")
-	r.Static("/upload", config.C.App.PublicPath)
+	r.Static("/public", config.C.App.PublicPath)
 
 	r.Use(midGate, midRecovery) // 中间件
 

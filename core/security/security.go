@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
+	"fmt"
 	"os"
 )
 
@@ -124,4 +126,8 @@ func TripleDesDecrypt(ciphertext string, key []byte, iv []byte) ([]byte, error) 
 	length := len(crypted)
 	unPadding := int(crypted[length-1])
 	return crypted[:(length - unPadding)], nil
+}
+
+func Md5Encrypt(message string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(message)))
 }

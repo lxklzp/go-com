@@ -120,7 +120,7 @@ type ExcelReadTable struct {
 	List  interface{}
 }
 
-// ExcelExport 导出成excel，注意是单excel文件
+// ExcelExport 导出成excel
 func ExcelExport(name string, title []interface{}, readTable func(page int, pageSize int, isCount bool) ExcelReadTable, streamWrite func(stream *excelize.StreamWriter, table ExcelReadTable, rowNext *int)) (string, error) {
 	// 初始化excel和写入流
 	f := excelize.NewFile()
@@ -162,19 +162,16 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 	}
 
 	// 创建导出文件夹
-	path := config.RuntimePath + "/public"
-	relativePath := "/" + time.Now().Format(config.MonthNumberFormatter)
-	path += relativePath
+	path := config.C.App.PublicPath + "/export/" + time.Now().Format(config.MonthNumberFormatter)
 	if err = os.MkdirAll(path, 0755); err != nil {
 		return "", err
 	}
 	filename := fmt.Sprintf("/%s_%s.xlsx", name, time.Now().Format(config.DateTimeNumberFormatter))
 	path += filename
-	relativePath += filename
 
 	if err = f.SaveAs(path); err != nil {
 		return "", err
 	}
 
-	return "/export" + relativePath, nil
+	return strings.Replace(path, config.C.App.PublicPath, "/public", 1), nil
 }
