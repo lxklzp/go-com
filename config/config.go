@@ -50,14 +50,12 @@ type app struct {
 	ApiAddr    string
 	WebApiAddr string
 
-	GatewayToken            string
-	GatewayAddr             string
-	PublicPath              string
-	MaxMultipartMemory      int64
-	GrpcAddr                string
-	GrpcToken               string
-	DelayQueueConsumePeriod int
-	DelayQueuePersistPeriod int
+	GatewayToken       string
+	GatewayAddr        string
+	PublicPath         string
+	MaxMultipartMemory int64
+	GrpcAddr           string
+	GrpcToken          string
 }
 
 type DbConfig struct {

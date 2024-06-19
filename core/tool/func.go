@@ -157,16 +157,20 @@ func Get(url string, param map[string]string, header map[string]string) ([]byte,
 	}
 
 	// header头
-	for k, v := range header {
-		req.Header.Set(k, v)
+	if len(header) > 0 {
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
 	}
 
 	// 参数
-	query := req.URL.Query()
-	for k, v := range param {
-		query.Add(k, v)
+	if len(param) > 0 {
+		query := req.URL.Query()
+		for k, v := range param {
+			query.Add(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
 	}
-	req.URL.RawQuery = query.Encode()
 
 	return httpReqResp(req, url, param)
 }
@@ -181,8 +185,10 @@ func Post(url string, param []byte, header map[string]string) ([]byte, error) {
 
 	// header头
 	req.Header.Set("Content-Type", "application/json")
-	for k, v := range header {
-		req.Header.Set(k, v)
+	if len(header) > 0 {
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
 	}
 
 	return httpReqResp(req, url, param)

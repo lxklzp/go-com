@@ -65,9 +65,9 @@ func midRecovery(c *gin.Context) {
 		if err := recover(); err != nil {
 			msg := tool.ErrorStack(err)
 			if config.C.App.DebugMode {
-				c.JSON(http.StatusOK, map[string]interface{}{"code": 500, "message": msg})
+				c.JSON(http.StatusOK, map[string]interface{}{"code": 500, "message": msg, "data": nil})
 			} else {
-				c.JSON(http.StatusOK, map[string]interface{}{"code": 500, "message": "服务器异常"})
+				c.JSON(http.StatusOK, map[string]interface{}{"code": 500, "message": "服务器异常", "data": nil})
 			}
 		}
 	}()
