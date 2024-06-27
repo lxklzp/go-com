@@ -43,9 +43,10 @@ func NewEs(cfg Config) *elasticsearch.Client {
 }
 
 type Base struct {
-	ScrollId string `json:"_scroll_id"`
-	Hits     Hits   `json:"hits"`
-	Count    int    `json:"count"`
+	ScrollId     string `json:"_scroll_id"`
+	Hits         Hits   `json:"hits"`
+	Aggregations map[string]map[string]interface{}
+	Count        int `json:"count"`
 }
 
 type Hits struct {
@@ -55,6 +56,9 @@ type Hits struct {
 
 type HitsTotal struct {
 	Value int `json:"value"`
+}
+
+type Aggregations struct {
 }
 
 /*
@@ -141,6 +145,104 @@ func SearchPagination(es *elasticsearch.Client, index string, sql string, handle
 		logr.L.Error(err)
 	}
 	return total
+}
+
+/*
+Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg max min sum
+
+	{
+	    "size": 10,
+	    "aggs": {
+	        "avg_of_delay": {
+	            "avg": {
+	                "field": "delay"
+	            }
+	        }
+	    },
+	    "query": {
+	        "bool": {
+	            "should": [
+	                {
+	                    "range": {
+	                        "status": {
+	                            "gte": "400",
+	                            "lte": "999"
+	                        }
+	                    }
+	                },
+	                {
+	                    "term": {
+	                        "status": "失败"
+	                    }
+	                }
+	            ],
+	            "minimum_should_match": 1,
+	            "must_not": {
+	                "range": {
+	                    "age": {
+	                        "gte": 10,
+	                        "lte": 20
+	                    }
+	                }
+	            },
+	            "filter": [
+	                {
+	                    "term": {
+	                        "eventData.host": "10.255.12.10"
+	                    }
+	                },
+	                {
+	                    "term": {
+	                        "taskid": "942266"
+	                    }
+	                },
+	                {
+	                    "terms": {
+	                        "timestamp": [
+	                            "1719230478829",
+	                            "1719230481822"
+	                        ]
+	                    }
+	                },
+	                {
+	                    "range": {
+	                        "delay": {
+	                            "gt": 0
+	                        }
+	                    }
+	                },
+	                {
+	                    "range": {
+	                        "@timestamp": {
+	                            "gte": "2024-06-24T09:22:00",
+	                            "lt": "2025-06-25T19:22:00"
+	                        }
+	                    }
+	                }
+	            ]
+	        }
+	    }
+	}
+*/
+func Search(es *elasticsearch.Client, index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {
+	// 查询语句转buf
+	buffer := ReqBufPool.Get().(*bytes.Buffer)
+	defer func() {
+		buffer.Reset()
+		ReqBufPool.Put(buffer)
+	}()
+	buffer.WriteString(sql)
+
+	// 首次查询 search
+	respSearch, err := es.Search(es.Search.WithIndex(index), es.Search.WithBody(buffer), es.Search.WithPretty())
+	var base Base
+	if err != nil {
+		logr.L.Error(err)
+		return 0, nil, nil
+	}
+	json.NewDecoder(respSearch.Body).Decode(&base)
+	respSearch.Body.Close()
+	return base.Hits.Total.Value, base.Hits.Hits, base.Aggregations
 }
 
 /*
