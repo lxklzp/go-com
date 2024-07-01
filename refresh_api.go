@@ -24,7 +24,7 @@ func main() {
 		"api_prefix":  "api/go-com",
 	}
 
-	//api.TestServApi()
+	api.RunForRefreshApi()
 	routes := api.ServApi.Handler.(*gin.Engine).Routes()
 	var apiList []ApiItem
 	for _, route := range routes {

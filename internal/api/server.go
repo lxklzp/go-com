@@ -98,3 +98,13 @@ func midGate(c *gin.Context) {
 	// 验证请求是否来自网关
 	c.Next()
 }
+
+func RunForRefreshApi() {
+	r := gin.New()
+	bind(r) // 绑定接口
+	// 启动
+	ServApi = &http.Server{
+		Addr:    config.C.App.ApiAddr,
+		Handler: r,
+	}
+}

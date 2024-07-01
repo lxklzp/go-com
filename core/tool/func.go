@@ -19,8 +19,13 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 	"unicode"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // ExitNotify 监听退出信号，关闭系统资源
 func ExitNotify(close func()) {
@@ -324,6 +329,18 @@ func SliceAvg[T int | float64](array []T) T {
 		sum += v
 	}
 	return sum / T(len(array))
+}
+
+// SliceIntToString 数字切片转字符串切片
+func SliceIntToString(sliceInt []int) []string {
+	if len(sliceInt) == 0 {
+		return nil
+	}
+	var sliceString []string
+	for _, i := range sliceInt {
+		sliceString = append(sliceString, strconv.Itoa(i))
+	}
+	return sliceString
 }
 
 // MapIntersect 求map[T]bool的交集
