@@ -28,10 +28,10 @@ func (m *logFormatterEmpty) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 func InitLog(filename string) {
-	L = NewLog(filename, true)
+	L = NewLog(filename, true, config.C.App.LogExpire)
 }
 
-func NewLog(filename string, format bool) *logrus.Logger {
+func NewLog(filename string, format bool, expire int) *logrus.Logger {
 	L := logrus.New()
 	if config.C.App.DebugMode {
 		L.SetLevel(logrus.DebugLevel)
@@ -55,7 +55,7 @@ func NewLog(filename string, format bool) *logrus.Logger {
 	writer := &lumberjack.Logger{
 		Filename:  path + "/" + filename + ".log",
 		MaxSize:   100,
-		MaxAge:    2,
+		MaxAge:    expire,
 		LocalTime: true,
 	}
 	L.SetOutput(io.MultiWriter(writer, os.Stdout)) // 输出到文件和控制台

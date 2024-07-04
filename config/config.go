@@ -45,6 +45,7 @@ type app struct {
 	Environment   int
 	Prefix        string
 	RuntimePath   string
+	LogExpire     int
 
 	PublicIp   string
 	ApiAddr    string
@@ -91,7 +92,7 @@ type Kafka struct {
 	SecurityProtocol string
 	SaslMechanisms   string
 
-	IsLog               bool
+	LogExpire           int
 	MaxConsumeWorkerNum int32
 }
 

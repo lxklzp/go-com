@@ -11,6 +11,8 @@ App:
   Prefix: go-com
   # 运行时的缓存文件目录 空表示：项目目录/runtime
   RuntimePath:
+  # 日志有效期，单位天
+  LogExpire: 10
 
   # 公网IP（用于外网机器人访问）
   PublicIp: 192.168.2.70
@@ -55,8 +57,8 @@ Kafka:
   Group: test-group6
   SecurityProtocol:
   SaslMechanisms:
-  # kafka消费是否写入日志
-  IsLog: true
+  # kafka消息消费日志有效期，单位天，0表示不记录
+  LogExpire: 10
   # kafka最大消费者数目
   MaxConsumeWorkerNum: 10
 

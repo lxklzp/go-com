@@ -18,7 +18,7 @@ type Kafka struct {
 	Producer           *queue.Producer
 	cfgP               Config         // 生产者配置缓存
 	cfgC               Config         // 消费者配置缓存
-	L                  *logrus.Logger // 消费的消息日志，根据config.Kafka.IsLog判断是否写日志
+	L                  *logrus.Logger // 消费的消息日志，根据config.Kafka.LogExpire判断是否写日志
 	ConsumeWorkerNumCh chan bool
 }
 
@@ -61,8 +61,8 @@ func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
 		logr.L.Fatal(err)
 	}
 	logr.L.Infof("[kafka] 消费者连接到kafka并订阅主题%s，等待消息...", cfg.Topic)
-	if cfg.IsLog {
-		kafka.L = logr.NewLog("kafka_"+cfg.Topic, false)
+	if cfg.LogExpire > 0 {
+		kafka.L = logr.NewLog("kafka_"+cfg.Topic, false, cfg.LogExpire)
 	}
 }
 
@@ -74,7 +74,7 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 
 	switch e := event.(type) {
 	case *queue.Message:
-		if kafka.cfgC.IsLog {
+		if kafka.cfgC.LogExpire > 0 {
 			kafka.L.Infof("[%s] %s: %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Value))
 		}
 		// 处理消息
