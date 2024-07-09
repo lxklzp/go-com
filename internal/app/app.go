@@ -8,7 +8,6 @@ import (
 	"go-com/core/service"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"gorm.io/gorm"
-	"net/http/httputil"
 )
 
 var Clickhouse *gorm.DB
@@ -18,7 +17,6 @@ var Redis *redis.Client
 var Etcd *clientv3.Client
 var Nb *nebula.SessionPool
 var SD *service.Discovery
-var ProxyVmc *httputil.ReverseProxy
 var Es *elasticsearch.Client
 var KafkaP kafka.Kafka
 var KafkaCQ kafka.Kafka

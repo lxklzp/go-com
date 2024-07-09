@@ -1,13 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-com/config"
 	"go-com/internal/api/controller"
-	"go-com/internal/app"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 )
 
 func bind(r *gin.Engine) {
@@ -19,10 +17,8 @@ func bind(r *gin.Engine) {
 		})
 	}
 
-	// vmc代理
-	urlVmc, _ := url.Parse("http://192.168.2.66:18080")
-	app.ProxyVmc = httputil.NewSingleHostReverseProxy(urlVmc)
-	r.POST("/index/api/webrtc", func(c *gin.Context) {
-		app.ProxyVmc.ServeHTTP(c.Writer, c.Request)
+	r.Any("/nifi-api/*api", controller.Nifi.ProxyApi)
+	r.GET("/nifi-phoenix-home/:header", func(c *gin.Context) {
+		fmt.Println(c.Param("header"))
 	})
 }

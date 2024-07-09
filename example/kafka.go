@@ -1,29 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"go-com/config"
 	"go-com/core/kafka"
-	"go-com/core/logr"
+	"go-com/internal/app"
 	"time"
 )
 
-func main() {
-	config.Load()
-	logr.InitLog("example")
+func InitSystem() {
+	app.KafkaP.InitProducer(kafka.Config{Kafka: config.C.Kafka})
+	go exampleResp()
+}
 
-	k := kafka.Kafka{}
-	k.InitProducer(kafka.Config{Kafka: config.C.Kafka})
+var KafkaTopicExampleResp = "example_resp"
 
-	k.Produce(nil, []byte("hello 你好1"), "")
-	k.Produce(nil, []byte("hello 你好2"), "")
-	k.Produce(nil, []byte("hello 你好3"), "")
-	k.CloseProducer()
-
-	k.InitConsumer(kafka.Config{Kafka: config.C.Kafka}, "earliest")
+// 消费kafka
+func exampleResp() {
+	cfg := kafka.Config{Kafka: config.C.Kafka}
+	cfg.Topic = KafkaTopicExampleResp
+	cfg.Group = KafkaTopicExampleResp + "_group"
+	app.KafkaCQ.InitConsumer(cfg, "latest")
 	for {
-		k.Consume(func(key []byte, msg []byte, timestamp *time.Time) {
-			fmt.Println(string(msg))
+		app.KafkaCQ.Consume(func(key []byte, msg []byte, timestamp *time.Time) {
+			// TODO
 		})
 	}
 }
