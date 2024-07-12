@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/go-redis/redis/v8"
+	"github.com/robfig/cron/v3"
 	nebula "github.com/vesoft-inc/nebula-go/v3"
 	"go-com/core/kafka"
 	"go-com/core/service"
@@ -20,3 +21,4 @@ var SD *service.Discovery
 var Es *elasticsearch.Client
 var KafkaP kafka.Kafka
 var KafkaCQ kafka.Kafka
+var Cron *cron.Cron

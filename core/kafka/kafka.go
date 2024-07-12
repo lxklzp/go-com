@@ -75,7 +75,7 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 	switch e := event.(type) {
 	case *queue.Message:
 		if kafka.cfgC.LogExpire > 0 {
-			kafka.L.Infof("[%s] %s: %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Value))
+			kafka.L.Infof("[%s] [%s] [%s] %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Key), string(e.Value))
 		}
 		// 处理消息
 		kafka.ConsumeWorkerNumCh <- true

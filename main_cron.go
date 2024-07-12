@@ -6,6 +6,7 @@ import (
 	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
+	"go-com/internal/app"
 	"go-com/internal/system"
 	"os"
 	"strconv"
@@ -14,15 +15,15 @@ import (
 func main() {
 	config.Load()
 	logr.InitLog("cront")
-	c := cron.New()
+	app.Cron = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 
 	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 	tool.ExitNotify(func() {
-		c.Stop()
+		app.Cron.Stop()
 	})
 
-	// 定时任务使用示例：统计，每隔6小时执行一次
-	_, err := c.AddFunc("1 */6 * * *", func() {
+	// 定时任务使用示例
+	_, err := app.Cron.AddFunc("* * * * *", func() {
 		logr.L.Info("开始统计xxx")
 		indexAll := system.Stat()
 		logr.L.Infof("完成统计xxx，共计：%d", indexAll)
@@ -31,7 +32,7 @@ func main() {
 		logr.L.Error(err)
 	}
 
-	c.Start()
+	app.Cron.Start()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
