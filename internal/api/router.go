@@ -17,6 +17,9 @@ func bind(r *gin.Engine) {
 		})
 	}
 
+	r.GET("/version", func(c *gin.Context) {
+		c.String(http.StatusOK, config.Version)
+	})
 	r.Any("/nifi-api/*api", controller.Nifi.ProxyApi)
 	r.GET("/nifi-phoenix-home/:header", func(c *gin.Context) {
 		fmt.Println(c.Param("header"))

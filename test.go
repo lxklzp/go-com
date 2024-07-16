@@ -4,14 +4,20 @@ import (
 	"fmt"
 	"go-com/config"
 	"go-com/core/logr"
-	"go-com/core/rds"
-	"go-com/core/security"
-	"go-com/internal/app"
+	"os"
+	"os/exec"
 )
 
 func main() {
 	config.Load()
 	logr.InitLog("test")
-	app.Redis = rds.NewRedis(rds.Config{Redis: config.C.Redis})
-	fmt.Println(security.Md5Encrypt("aa"))
+
+	var err error
+	cmd := exec.Command("sh", "-c", "cal")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = cmd.Run(); err != nil {
+		fmt.Println(err)
+	}
+
 }

@@ -19,7 +19,7 @@ func main() {
 	logr.InitLog("build_app")
 	reload := true // 是否完全重新打包
 	buildPath := root + "runtime/build_app/"
-	program := "main_app"
+	program := "main_app" + "_" + config.Version
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("go build -o %s %s", root+program, root+"main_app.go"))
 	fileList := []string{
 		program,

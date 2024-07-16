@@ -24,6 +24,7 @@ const (
 )
 
 const (
+	Version                 = "v1.0.1"
 	DateTimeFormatter       = "2006-01-02 15:04:05"
 	MonthNumberFormatter    = "200601"
 	DateTimeNumberFormatter = "20060102150405"
