@@ -8,6 +8,7 @@ import (
 	"go-com/core/logr"
 	"gorm.io/gorm"
 	"math"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -121,7 +122,7 @@ type ExcelReadTable struct {
 }
 
 // ExcelExport 导出成excel
-func ExcelExport(name string, title []interface{}, readTable func(page int, pageSize int, isCount bool) ExcelReadTable, streamWrite func(stream *excelize.StreamWriter, table ExcelReadTable, rowNext *int)) (string, error) {
+func ExcelExport(name string, title []interface{}, readTable func(page int, pageSize int, isCount bool) ExcelReadTable, streamWrite func(stream *excelize.StreamWriter, table ExcelReadTable, rowNext *int), w http.ResponseWriter) (string, error) {
 	// 初始化excel和写入流
 	f := excelize.NewFile()
 	defer func() {
@@ -161,17 +162,27 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 		return "", err
 	}
 
-	// 创建导出文件夹
-	path := config.C.App.PublicPath + "/export/" + time.Now().Format(config.MonthNumberFormatter)
-	if err = os.MkdirAll(path, 0755); err != nil {
-		return "", err
-	}
-	filename := fmt.Sprintf("/%s_%s.xlsx", name, time.Now().Format(config.DateTimeNumberFormatter))
-	path += filename
+	filename := fmt.Sprintf("%s_%s.xlsx", name, time.Now().Format(config.DateTimeNumberFormatter))
+	if w == nil {
+		// 创建导出文件夹
+		path := config.C.App.PublicPath + "/export/" + time.Now().Format(config.MonthNumberFormatter)
+		if err = os.MkdirAll(path, 0755); err != nil {
+			return "", err
+		}
+		path += "/" + filename
 
-	if err = f.SaveAs(path); err != nil {
-		return "", err
-	}
+		if err = f.SaveAs(path); err != nil {
+			return "", err
+		}
 
-	return strings.Replace(path, config.C.App.PublicPath, "/public", 1), nil
+		return strings.Replace(path, config.C.App.PublicPath, "/public", 1), nil
+	} else {
+		w.Header().Set("Cache-Control", "max-age=0")
+		w.Header().Set("Content-type", "application/vnd.ms-excel;charset=utf-8")
+		w.Header().Set("Content-Disposition", "attachment;filename="+filename)
+		if err = f.Write(w); err != nil {
+			return "", err
+		}
+		return "", nil
+	}
 }

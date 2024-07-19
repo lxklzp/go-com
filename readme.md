@@ -12,6 +12,7 @@
 * 表达式引擎（expr-lang/expr）
 * 反向代理（标准库 ReverseProxy）
 * 日志（sirupsen/logrus）
+* 版本号
 * 打包
 
 ## 支持的数据存储与交互类型

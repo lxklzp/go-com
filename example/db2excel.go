@@ -38,5 +38,5 @@ func main() {
 				stream.SetRow("A"+strconv.Itoa(*rowNext), row)
 				*rowNext++
 			}
-		}))
+		}, nil))
 }
