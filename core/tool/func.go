@@ -16,6 +16,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -25,6 +27,7 @@ import (
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+	regFloat, _ = regexp.Compile(`^[\-\d.]+`)
 }
 
 // ExitNotify 监听退出信号，关闭系统资源
@@ -269,6 +272,29 @@ func SearchJsonByKeysRecursive(object interface{}, key []string, handler func(ob
 	}
 }
 
+// SearchJsonOnceByKey 在json数据中查找一次指定键名的值
+func SearchJsonOnceByKey(object interface{}, key string) interface{} {
+	switch object.(type) {
+	case []interface{}:
+		object := object.([]interface{})
+		for _, sub := range object {
+			return SearchJsonOnceByKey(sub, key)
+		}
+	case map[string]interface{}:
+		object := object.(map[string]interface{})
+		for k, sub := range object {
+			if k == key {
+				return sub
+			} else {
+				if value := SearchJsonOnceByKey(sub, key); value != config.Sep {
+					return value
+				}
+			}
+		}
+	}
+	return config.Sep
+}
+
 // FormatStandardTime 格式化标准时间字符串
 func FormatStandardTime(t string) string {
 	if len(t) < 19 {
@@ -352,4 +378,101 @@ func MapIntersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
 		}
 	}
 	return res
+}
+
+var regFloat *regexp.Regexp
+
+// InterfaceToFloat interface转float
+func InterfaceToFloat(v interface{}) (float64, error) {
+	if v == nil {
+		return 0, errors.New("不支持的类型")
+	}
+	switch v.(type) {
+	case string:
+		return strconv.ParseFloat(regFloat.FindString(v.(string)), 10)
+	case float64:
+		return v.(float64), nil
+	case int:
+		return float64(v.(int)), nil
+	case int8:
+		return float64(v.(int8)), nil
+	case int16:
+		return float64(v.(int16)), nil
+	case int32:
+		return float64(v.(int32)), nil
+	case int64:
+		return float64(v.(int64)), nil
+	case uint:
+		return float64(v.(uint)), nil
+	case uint8:
+		return float64(v.(uint8)), nil
+	case uint16:
+		return float64(v.(uint16)), nil
+	case uint32:
+		return float64(v.(uint32)), nil
+	case uint64:
+		return float64(v.(uint64)), nil
+	default:
+		return 0, errors.New("不支持的类型")
+	}
+}
+
+// 根据float排序，升序
+type sortFloat struct {
+	value float64
+	index int
+}
+type SortFloatList []sortFloat
+
+func (s SortFloatList) Len() int           { return len(s) }
+func (s SortFloatList) Less(i, j int) bool { return s[i].value < s[j].value }
+func (s SortFloatList) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+
+// MapSortFloat 对map数组进行float排序，sortType：1 升序 2 降序
+func MapSortFloat(mList []map[string]interface{}, sortField string, sortType int) []map[string]interface{} {
+	// 参数验证
+	if len(mList) == 0 || (sortType != 1 && sortType != 2) {
+		return mList
+	}
+
+	// 准备排序数据
+	var ok bool
+	var err error
+	var value, valueDefault float64
+	if sortType == 1 {
+		valueDefault = config.MaxFloat
+	} else {
+		valueDefault = config.MinFloat
+	}
+	// 构建排序结构体：SortFloatList
+	var sortFloatList SortFloatList
+	sortFloatList = make([]sortFloat, 0, len(mList))
+	for k, m := range mList {
+		if _, ok = m[sortField]; !ok {
+			// 处理排序字段不存在的情况
+			value = valueDefault
+		} else if value, err = InterfaceToFloat(m[sortField]); err != nil {
+			// 处理排序字段不能转换成float64的情况
+			value = valueDefault
+		}
+		sortFloatList = append(sortFloatList, sortFloat{
+			value: value,
+			index: k,
+		})
+	}
+
+	// SortFloatList排序
+	if sortType == 1 {
+		sort.Sort(sortFloatList)
+	} else {
+		sort.Sort(sort.Reverse(sortFloatList))
+	}
+
+	// 根据已排序的SortFloatList，生成结果数据
+	result := make([]map[string]interface{}, 0, len(mList))
+	for _, si := range sortFloatList {
+		result = append(result, mList[si.index])
+	}
+
+	return result
 }

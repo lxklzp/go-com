@@ -31,6 +31,9 @@ const (
 	DateNumberFormatter     = "20060102"
 
 	RedisErrNil = "redis: nil"
+	Sep         = "?#"
+	MinFloat    = float64(-9007199254740992) // -2^53
+	MaxFloat    = float64(9007199254740992)  // 2^53
 )
 
 const (
