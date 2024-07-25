@@ -135,6 +135,10 @@ func (kafka *Kafka) InitProducer(cfg Config) {
 }
 
 func (kafka *Kafka) Produce(key []byte, data []byte, topic string) {
+	if kafka.cfgP.Servers == "" {
+		return
+	}
+
 	var err error
 	// Delivery report handler for produced messages
 	go func() {

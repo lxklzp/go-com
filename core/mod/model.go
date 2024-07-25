@@ -1,6 +1,7 @@
 package mod
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/xuri/excelize/v2"
@@ -179,7 +180,7 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 	} else {
 		w.Header().Set("Cache-Control", "max-age=0")
 		w.Header().Set("Content-type", "application/vnd.ms-excel;charset=utf-8")
-		w.Header().Set("Content-Disposition", "attachment;filename="+filename)
+		w.Header().Set("Content-Disposition", "attachment;filename="+base64.StdEncoding.EncodeToString([]byte(filename)))
 		if err = f.Write(w); err != nil {
 			return "", err
 		}
