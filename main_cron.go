@@ -22,6 +22,14 @@ func main() {
 		app.Cron.Stop()
 	})
 
+	cronRun()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	<-ctx.Done()
+}
+
+func cronRun() {
 	// 定时任务使用示例
 	_, err := app.Cron.AddFunc("* * * * *", func() {
 		logr.L.Info("开始统计xxx")
@@ -33,8 +41,4 @@ func main() {
 	}
 
 	app.Cron.Start()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	<-ctx.Done()
 }

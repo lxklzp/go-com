@@ -1,23 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"go-com/config"
+	"go-com/core/ds"
 	"go-com/core/logr"
-	"os"
-	"os/exec"
+	"go-com/core/my"
+	"go-com/core/pg"
+	"go-com/internal/app"
 )
 
 func main() {
 	config.Load()
-	logr.InitLog("test")
+	logr.InitLog("create_db_table")
+	app.Mysql = my.NewDb(my.Config{Mysql: config.C.Mysql})
+	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
 
-	var err error
-	cmd := exec.Command("sh", "-c", "cal")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err = cmd.Run(); err != nil {
-		fmt.Println(err)
-	}
-
+	pg2my := ds.NewPg2My("postgresql2mysql_multi.yaml", app.Pg, pg.Config{Postgresql: config.C.Postgresql}, app.Mysql, my.Config{Mysql: config.C.Mysql})
+	pg2my.Process()
 }

@@ -11,6 +11,7 @@
 * 定时任务（robfig/cron/v3）
 * 表达式引擎（expr-lang/expr）
 * 反向代理（标准库 ReverseProxy）
+* 数据同步：pg2my
 * 日志（sirupsen/logrus）
 * 版本号
 * 打包

@@ -6,6 +6,7 @@ import (
 	"go-com/core/orm"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"regexp"
 	"strings"
 )
 
@@ -38,6 +39,21 @@ func GetSchemaTableName(tableName string) (string, string) {
 		tableName = names[1]
 	}
 	return schemaName, tableName
+}
+
+// GetUniqueKeySql 查找指定表中的一个唯一索引列的sql呈现
+func GetUniqueKeySql(db *gorm.DB, schema string, tableName string) string {
+	var rows []map[string]interface{}
+	sql := fmt.Sprintf("select indexdef from pg_indexes where schemaname='%s' and tablename='%s';", schema, tableName)
+	db.Raw(sql).Scan(&rows)
+	for _, row := range rows {
+		indexdef := row["indexdef"].(string)
+		if strings.Contains(indexdef, "UNIQUE") {
+			reg, _ := regexp.Compile(`\((.+)\)`)
+			return reg.FindStringSubmatch(indexdef)[1]
+		}
+	}
+	return ""
 }
 
 // GetDbTables 获取数据库的所有表

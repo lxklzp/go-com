@@ -4,6 +4,8 @@
 
 /html/*
 
-/data
-
 /dao
+
+/data/*
+
+create_db_table.go
