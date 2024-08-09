@@ -13,11 +13,12 @@
 * 反向代理（标准库 ReverseProxy）
 * 数据同步：pg2my
 * 日志（sirupsen/logrus）
+* 加密：rsa、https证书、aes、3des、md5
 * 版本号
 * 打包
 
 ## 支持的数据存储与交互类型
-* mysql、postgresql、clickhouse、nebula
+* mysql、postgresql、clickhouse、nebula、oracle
 * kafka、rabbitmq、redis、etcd、elasticsearch
 * excel、csv、zip、file
 * tcp、upd、email

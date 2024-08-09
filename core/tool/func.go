@@ -21,12 +21,10 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 	"unicode"
 )
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
 	regFloat, _ = regexp.Compile(`^[\-\d.]+`)
 }
 

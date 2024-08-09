@@ -104,6 +104,15 @@ type Mysql struct {
 	DbConfig DbConfig
 }
 
+type Oracle struct {
+	Host     string
+	Port     int
+	User     string
+	Password string
+	Service  string
+	DbConfig DbConfig
+}
+
 type Redis struct {
 	Addr     string
 	Password string
