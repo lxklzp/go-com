@@ -152,10 +152,11 @@ type RateBreaker struct {
 }
 
 type Dq struct {
-	ConsumePeriod int
-	PersistPeriod int
-	MaxWorkerNum  int32
-	CheckNoExist  bool
+	ConsumePeriod       int
+	PersistPeriod       int
+	MaxWorkerNum        int32
+	CheckNoExist        bool
+	CheckNoRunningExist bool
 }
 
 type Es struct {

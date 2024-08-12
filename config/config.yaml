@@ -134,3 +134,5 @@ Dq:
   MaxWorkerNum: 100
   # 是否判断消息的no是否存在
   CheckNoExist: true
+  # 判断执行中的消息的no是否存在
+  CheckNoRunningExist: true

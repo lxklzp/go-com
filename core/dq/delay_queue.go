@@ -33,6 +33,7 @@ type Queue struct {
 	lock        sync.Mutex
 	filename    string // 持久化文件名
 	workerNumCh chan bool
+	runningNo   sync.Map // 执行中的消息的no列表
 }
 
 /*---------- container/heap的实现 ----------*/
@@ -93,12 +94,22 @@ func (q *Queue) Consume(handler func(msg Message)) {
 			q.lock.Unlock()
 			break
 		}
+
 		m := heap.Pop(q).(Message)
+
+		// 判断执行中的消息的no是否存在
+		if _, ok := q.runningNo.Load(m.No); ok && config.C.Dq.CheckNoRunningExist {
+			q.lock.Unlock()
+			continue
+		}
+		q.runningNo.Store(m.No, true)
 		q.lock.Unlock()
+
 		if m.Timestamp <= time.Now().Unix() {
 			if config.C.Dq.MaxWorkerNum == 0 {
 				// 0表示串行
 				handler(m)
+				q.runningNo.Delete(m.No)
 			} else {
 				// 并行
 				q.workerNumCh <- true
@@ -107,6 +118,7 @@ func (q *Queue) Consume(handler func(msg Message)) {
 						if err := recover(); err != nil {
 							logr.L.Error(tool.ErrorStack(err))
 						}
+						q.runningNo.Delete(m.No)
 						<-q.workerNumCh
 					}()
 					handler(m)
@@ -115,6 +127,7 @@ func (q *Queue) Consume(handler func(msg Message)) {
 		} else {
 			q.lock.Lock()
 			heap.Push(q, m)
+			q.runningNo.Delete(m.No)
 			q.lock.Unlock()
 			break
 		}
@@ -177,4 +190,18 @@ func (q *Queue) loopPersist() {
 	for range ticker.C {
 		q.Persist()
 	}
+}
+
+// NextTime 周期性任务时，获取下一次执行时间，period单位：分钟
+func (q *Queue) NextTime(beginTimeStr string, period time.Duration) time.Time {
+	nextTime, _ := time.ParseInLocation(config.DateTimeFormatter, tool.FormatStandardTime(beginTimeStr), time.Local)
+	now := time.Now()
+	if nextTime.Before(now) {
+		nextTime = nextTime.Add(time.Minute * period)
+	}
+	offset := now.Sub(nextTime).Minutes() / float64(period)
+	if offset > 0 {
+		nextTime = nextTime.Add(time.Minute * period * time.Duration(int(offset)))
+	}
+	return nextTime
 }
