@@ -9,6 +9,8 @@ import (
 	"go-com/core/tool"
 	"log"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -192,16 +194,57 @@ func (q *Queue) loopPersist() {
 	}
 }
 
+// CycleTime 轮询时间
+type CycleTime struct {
+	BeginTime string        // 开始时间
+	Type      int           // 1 循环 2 定时
+	Period    time.Duration // 循环时间间隔，单位分钟
+	TimePoint []string      // 定时时间点数组，12:34:56格式
+}
+
 // NextTime 周期性任务时，获取下一次执行时间，period单位：分钟
-func (q *Queue) NextTime(beginTimeStr string, period time.Duration) time.Time {
-	nextTime, _ := time.ParseInLocation(config.DateTimeFormatter, tool.FormatStandardTime(beginTimeStr), time.Local)
+func (q *Queue) NextTime(cycleTime CycleTime) time.Time {
 	now := time.Now()
-	if nextTime.Before(now) {
-		nextTime = nextTime.Add(time.Minute * period)
+	var nextTime time.Time
+	switch cycleTime.Type {
+	case 1:
+		nextTime, _ = time.ParseInLocation(config.DateTimeFormatter, cycleTime.BeginTime, time.Local)
+		// 下一次时间要在当前时间之后
+		offset := now.Sub(nextTime).Minutes() / float64(cycleTime.Period)
+		if offset > 0 {
+			nextTime = nextTime.Add(time.Minute * cycleTime.Period * time.Duration(int(offset)+1))
+		}
+		return nextTime
+	case 2:
+		sort.Strings(cycleTime.TimePoint)
+		datePointBegin := cycleTime.BeginTime[:10]
+		datePointNow := now.Format(config.DateFormatter)
+		// 开始时间在今天以后
+		if strings.Compare(datePointBegin, datePointNow) > 0 {
+			nextTime, _ = time.ParseInLocation(config.DateTimeFormatter, datePointBegin+" "+cycleTime.TimePoint[0], time.Local)
+			return nextTime
+		}
+		// 开始时间在今天或者今天以前
+		timePoint := ""
+		for _, t := range cycleTime.TimePoint {
+			// 找到今天的下一个时间点
+			if strings.Compare(t, now.Format(config.TimeFormatter)) > 0 {
+				timePoint = t
+				break
+			}
+		}
+		if timePoint == "" {
+			// 今天没有时间点了，改成明天
+			nextTime, _ = time.ParseInLocation(config.DateTimeFormatter, datePointNow+" "+cycleTime.TimePoint[0], time.Local)
+			nextTime = nextTime.Add(time.Hour * 24)
+		} else {
+			// 今天有时间点
+			nextTime, _ = time.ParseInLocation(config.DateTimeFormatter, datePointNow+" "+timePoint, time.Local)
+		}
+		return nextTime
+	case 3:
+		return now
+	default:
+		return time.Time{}
 	}
-	offset := now.Sub(nextTime).Minutes() / float64(period)
-	if offset > 0 {
-		nextTime = nextTime.Add(time.Minute * period * time.Duration(int(offset)))
-	}
-	return nextTime
 }

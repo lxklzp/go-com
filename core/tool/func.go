@@ -26,6 +26,7 @@ import (
 
 func init() {
 	regFloat, _ = regexp.Compile(`^[\-\d.]+`)
+	regInt, _ = regexp.Compile(`^[\-\d]+`)
 }
 
 // ExitNotify 监听退出信号，关闭系统资源
@@ -378,7 +379,7 @@ func MapIntersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
 	return res
 }
 
-var regFloat *regexp.Regexp
+var regFloat, regInt *regexp.Regexp
 
 // InterfaceToFloat interface转float
 func InterfaceToFloat(v interface{}) (float64, error) {
@@ -410,6 +411,41 @@ func InterfaceToFloat(v interface{}) (float64, error) {
 		return float64(v.(uint32)), nil
 	case uint64:
 		return float64(v.(uint64)), nil
+	default:
+		return 0, errors.New("不支持的类型")
+	}
+}
+
+// InterfaceToInt interface转int
+func InterfaceToInt(v interface{}) (int, error) {
+	if v == nil {
+		return 0, errors.New("不支持的类型")
+	}
+	switch v.(type) {
+	case string:
+		return strconv.Atoi(regInt.FindString(v.(string)))
+	case float64:
+		return int(v.(float64)), nil
+	case int:
+		return v.(int), nil
+	case int8:
+		return int(v.(int8)), nil
+	case int16:
+		return int(v.(int16)), nil
+	case int32:
+		return int(v.(int32)), nil
+	case int64:
+		return int(v.(int64)), nil
+	case uint:
+		return int(v.(uint)), nil
+	case uint8:
+		return int(v.(uint8)), nil
+	case uint16:
+		return int(v.(uint16)), nil
+	case uint32:
+		return int(v.(uint32)), nil
+	case uint64:
+		return int(v.(uint64)), nil
 	default:
 		return 0, errors.New("不支持的类型")
 	}
