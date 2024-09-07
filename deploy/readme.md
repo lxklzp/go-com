@@ -38,3 +38,21 @@ stdout_logfile=NONE
 startsecs=30
 startretries=60
 ```
+
+## 编译
+包含confluent-kafka-go的静态编译：
+
+安装musl：
+```
+wget https://musl.libc.org/releases/musl-latest.tar.gz
+tar zxvf musl-latest.tar.gz
+cd musl-*
+./configure --prefix=/usr/local/musl
+make && sudo make install
+/usr/local/musl/bin/musl-gcc -v
+```
+
+进入项目目录，编译：
+```
+CC=/usr/local/musl/bin/musl-gcc go build --ldflags '-linkmode external -extldflags "-static"' -tags musl -o /var/data/your-app/main_app /var/data/your-app/main_app.go
+```

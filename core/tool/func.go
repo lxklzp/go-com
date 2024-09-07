@@ -465,7 +465,7 @@ func (s SortFloatList) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 // MapSortFloat 对map数组进行float排序，sortType：1 升序 2 降序
 func MapSortFloat(mList []map[string]interface{}, sortField string, sortType int) []map[string]interface{} {
 	// 参数验证
-	if len(mList) == 0 || (sortType != 1 && sortType != 2) {
+	if len(mList) == 0 || sortField == "" || (sortType != 1 && sortType != 2) {
 		return mList
 	}
 

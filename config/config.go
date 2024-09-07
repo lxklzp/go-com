@@ -5,12 +5,15 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 var Root string // 根目录
 
 var RuntimePath string // 运行时的缓存文件目录
+
+var ConfigPath string // 配置文件目录
 
 var C config // 配置项
 
@@ -188,12 +191,14 @@ func Load() {
 	flag.Parse()
 
 	v := viper.New()
-	configPath := Root + "config"
 	if configFile == "" {
-		configFile = configPath + "/config.yaml"
+		ConfigPath = Root + "config"
+		configFile = ConfigPath + "/config.yaml"
+	} else {
+		ConfigPath = filepath.Dir(configFile)
 	}
 	v.SetConfigFile(configFile)
-	viper.AddConfigPath(configPath)
+	viper.AddConfigPath(ConfigPath)
 	if err := v.ReadInConfig(); err != nil {
 		log.Fatal(err)
 	}

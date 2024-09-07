@@ -35,11 +35,11 @@ App:
   GrpcToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
 
 Postgresql:
-  Host: 127.0.0.1
-  Port: 19750
-  User: rcyxt
-  Password: GZ_HANA@23&6
-  Dbname: hana_2000g_pg
+  Host: 192.168.2.70
+  Port: 5432
+  User: postgres
+  Password: mypass
+  Dbname: test
   MaxOpenConns: 200
   MaxIdleConns: 10
 
