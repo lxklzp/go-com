@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"go-com/config"
 	"go-com/core/etcd"
 	"go-com/core/logr"
@@ -12,6 +13,7 @@ import (
 	"go-com/internal/api"
 	"go-com/internal/app"
 	"go-com/internal/grpcs"
+	"go-com/internal/system"
 	"os"
 	"strconv"
 	"strings"
@@ -21,6 +23,8 @@ func main() {
 	config.Load()
 	logr.InitLog("app")
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
+	app.Cron = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
+	system.CronRun() // 定时任务
 	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
 	tool.ExitNotify(func() {
 		grpcs.Server.Stop()
