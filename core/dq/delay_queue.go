@@ -118,7 +118,7 @@ func (q *Queue) Consume(handler func(msg Message)) {
 				go func() {
 					defer func() {
 						if err := recover(); err != nil {
-							logr.L.Error(tool.ErrorStack(err))
+							tool.ErrorStack(err)
 						}
 						q.runningNo.Delete(m.No)
 						<-q.workerNumCh
@@ -167,7 +167,7 @@ func (q *Queue) loopConsume(handler func(msg Message)) {
 	ticker := time.NewTicker(time.Second * time.Duration(config.C.Dq.ConsumePeriod))
 	defer func() {
 		if err := recover(); err != nil {
-			logr.L.Error(tool.ErrorStack(err))
+			tool.ErrorStack(err)
 		}
 		ticker.Stop()
 		go q.loopConsume(handler)

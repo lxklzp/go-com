@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -43,7 +44,7 @@ func Run() {
 		Addr:    config.C.App.ApiAddr,
 		Handler: r,
 	}
-	if err := ServApi.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := ServApi.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logr.L.Fatal(err)
 	}
 }

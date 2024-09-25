@@ -66,7 +66,7 @@ func (sd *Discovery) Registry(serviceName string, serverId string, ServerAddr st
 
 	defer func() {
 		if err := recover(); err != nil {
-			logr.L.Error(tool.ErrorStack(err))
+			tool.ErrorStack(err)
 		}
 		lease.Close()
 		sd.Registry(serviceName, serverId, ServerAddr)

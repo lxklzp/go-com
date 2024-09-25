@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/robfig/cron/v3"
 	"go-com/config"
 	"go-com/core/etcd"
 	"go-com/core/logr"
@@ -23,13 +22,8 @@ func main() {
 	config.Load()
 	logr.InitLog("app")
 	app.Pg = pg.NewDb(pg.Config{Postgresql: config.C.Postgresql})
-	app.Cron = cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
-	system.CronRun() // 定时任务
-	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
-	tool.ExitNotify(func() {
-		grpcs.Server.Stop()
-		api.Shutdown()
-	})
+
+	system.Run()
 
 	if config.C.App.IsDistributed {
 		app.Etcd = etcd.NewEtcd(etcd.Config{Etcd: config.C.Etcd})
@@ -39,6 +33,13 @@ func main() {
 	}
 
 	go grpcs.Server.Run()
+
+	logr.L.Info("启动系统:" + strconv.Itoa(os.Getpid()))
+	tool.ExitNotify(func() {
+		grpcs.Server.Stop()
+		api.Shutdown()
+		app.Cron.Stop()
+	})
 
 	// 启动接口服务
 	api.Run()

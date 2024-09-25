@@ -86,7 +86,7 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 			timestamp := e.Timestamp
 			defer func() {
 				if err := recover(); err != nil {
-					logr.L.Error(tool.ErrorStack(err))
+					tool.ErrorStack(err)
 				}
 				<-kafka.ConsumeWorkerNumCh
 
