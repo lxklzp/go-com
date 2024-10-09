@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 	"unicode"
 )
 
@@ -317,6 +318,10 @@ func SliceHas[T int | string](list []T, value T) bool {
 
 // SliceUnique 切片去重
 func SliceUnique[T int | string](array []T) []T {
+	if len(array) == 0 {
+		return nil
+	}
+
 	m := make(map[T]struct{})
 	var ok bool
 	var result []T
@@ -333,7 +338,7 @@ func SliceUnique[T int | string](array []T) []T {
 // SliceRemoveValue 按值删除切片元素
 func SliceRemoveValue[T int | float64 | string](array []T, val T) []T {
 	if len(array) == 0 {
-		return array
+		return nil
 	}
 	var result []T
 	for _, v := range array {
@@ -466,7 +471,7 @@ func (s SortFloatList) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func MapSortFloat(mList []map[string]interface{}, sortField string, sortType int) []map[string]interface{} {
 	// 参数验证
 	if len(mList) == 0 || sortField == "" || (sortType != 1 && sortType != 2) {
-		return mList
+		return nil
 	}
 
 	// 准备排序数据
@@ -509,4 +514,139 @@ func MapSortFloat(mList []map[string]interface{}, sortField string, sortType int
 	}
 
 	return result
+}
+
+// 根据string排序，升序
+type sortString struct {
+	value string
+	index int
+}
+type SortStringList []sortString
+
+func (s SortStringList) Len() int { return len(s) }
+func (s SortStringList) Less(i, j int) bool {
+	if strings.Compare(s[i].value, s[j].value) < 0 {
+		return true
+	} else {
+		return false
+	}
+}
+func (s SortStringList) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// MapSortString 对map数组进行float排序，sortType：1 升序 2 降序
+func MapSortString(mList []map[string]interface{}, sortField string, sortType int) []map[string]interface{} {
+	// 参数验证
+	if len(mList) == 0 || sortField == "" || (sortType != 1 && sortType != 2) {
+		return nil
+	}
+
+	// 准备排序数据
+	var ok bool
+	var value string
+	// 构建排序结构体：SortStringList
+	var sortStringList SortStringList
+	sortStringList = make([]sortString, 0, len(mList))
+	for k, m := range mList {
+		if _, ok = m[sortField]; !ok {
+			// 处理排序字段不存在的情况
+			value = ""
+		} else {
+			value = InterfaceToString(m[sortField])
+		}
+		sortStringList = append(sortStringList, sortString{
+			value: value,
+			index: k,
+		})
+	}
+
+	// SortStringList排序
+	if sortType == 1 {
+		sort.Sort(sortStringList)
+	} else {
+		sort.Sort(sort.Reverse(sortStringList))
+	}
+
+	// 根据已排序的SortFloatList，生成结果数据
+	result := make([]map[string]interface{}, 0, len(mList))
+	for _, si := range sortStringList {
+		result = append(result, mList[si.index])
+	}
+
+	return result
+}
+
+// Holiday 获取一年中，法定节假日和周末日期
+// 节假日数据来源 https://www.gov.cn/gongbao/2023/issue_10806/202311/content_6913823.html
+func Holiday(festival []string, workday []string) []string {
+	var holiday []string
+	if len(festival) == 0 || len(workday) == 0 {
+		logr.L.Error("节假日数据有误")
+		return holiday
+	}
+
+	// 周末日期
+	var weekend []string
+	year := festival[0][:4]
+	end, _ := time.ParseInLocation(config.DateTimeFormatter, year+"-12-31 00:00:01", time.Local)
+	for step, _ := time.ParseInLocation(config.DateTimeFormatter, year+"-01-01 00:00:00", time.Local); step.Before(end); step = step.Add(time.Hour * 24) {
+		weekday := int(step.Weekday())
+		day := step.Format(config.DateFormatter)
+		if (weekday == 6 || weekday == 0) && (!SliceHas(workday, day)) {
+			weekend = append(weekend, step.Format(config.DateFormatter))
+		}
+	}
+
+	holiday = append(holiday, festival...)
+	holiday = append(holiday, weekend...)
+	holiday = SliceUnique(holiday)
+	return holiday
+}
+
+// GetTimeFromToPeriodExceptHoliday 获取两个时间段之间排除节假日的时间，单位秒
+func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holiday []string) (int, error) {
+	var err error
+	var timeFrom, timeTo, dateFrom, dateTo, dateStep time.Time
+
+	// 验证请求参数
+	if timeFrom, err = time.ParseInLocation(config.DateTimeFormatter, timeFromStr, time.Local); err != nil {
+		return 0, err
+	}
+	if timeTo, err = time.ParseInLocation(config.DateTimeFormatter, timeToStr, time.Local); err != nil {
+		return 0, err
+	}
+	if timeFrom.After(timeTo) {
+		return 0, errors.New("开始时间在结束时间之后")
+	}
+
+	// 开始、结束时间是同一天
+	if timeFromStr[:10] == timeToStr[:10] {
+		if SliceHas(holiday, timeFromStr[:10]) {
+			return 0, nil
+		} else {
+			return int(timeTo.Sub(timeFrom) / time.Second), nil
+		}
+	}
+
+	// 开始、结束时间不是同一天
+	var period int
+	dateFrom, _ = time.ParseInLocation(config.DateFormatter, timeFromStr[:10], time.Local)
+	dateTo, _ = time.ParseInLocation(config.DateFormatter, timeToStr[:10], time.Local)
+
+	// 开始当天
+	if !SliceHas(holiday, timeFromStr[:10]) {
+		period += int(dateFrom.AddDate(0, 0, 1).Sub(timeFrom) / time.Second)
+	}
+	// 中间日期
+	dateStep = dateFrom.AddDate(0, 0, 1)
+	for dateStep.Before(dateTo) {
+		if !SliceHas(holiday, dateStep.Format(config.DateFormatter)) {
+			period += 3600 * 24
+		}
+		dateStep = dateStep.AddDate(0, 0, 1)
+	}
+	// 结束当天
+	if !SliceHas(holiday, timeToStr[:10]) {
+		period += int(timeTo.Sub(dateTo) / time.Second)
+	}
+	return period, nil
 }

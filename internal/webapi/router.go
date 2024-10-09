@@ -3,7 +3,7 @@ package webapi
 import (
 	"github.com/gin-gonic/gin"
 	"go-com/config"
-	"go-com/internal/api/controller"
+	"go-com/internal/webapi/controller"
 	"net/http"
 )
 
@@ -18,5 +18,10 @@ func bind(r *gin.Engine) {
 
 	r.GET("/version", func(c *gin.Context) {
 		c.String(http.StatusOK, config.Version)
+	})
+
+	// excel导出示例
+	r.POST("/device-config-audit/export", func(c *gin.Context) {
+		controller.Test.ActExport(c)
 	})
 }
