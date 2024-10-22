@@ -90,6 +90,7 @@ func (q *Queue) Produce(msg Message) {
 }
 
 func (q *Queue) Consume(handler func(msg Message)) {
+	var runningList []Message
 	for {
 		q.lock.Lock()
 		if q.Len() == 0 {
@@ -101,6 +102,7 @@ func (q *Queue) Consume(handler func(msg Message)) {
 
 		// 判断执行中的消息的no是否存在
 		if _, ok := q.runningNo.Load(m.No); ok && config.C.Dq.CheckNoRunningExist {
+			runningList = append(runningList, m)
 			q.lock.Unlock()
 			continue
 		}
@@ -133,6 +135,11 @@ func (q *Queue) Consume(handler func(msg Message)) {
 			q.lock.Unlock()
 			break
 		}
+	}
+	for _, m := range runningList {
+		q.lock.Lock()
+		heap.Push(q, m)
+		q.lock.Unlock()
 	}
 }
 
@@ -167,7 +174,7 @@ func (q *Queue) loopConsume(handler func(msg Message)) {
 	ticker := time.NewTicker(time.Second * time.Duration(config.C.Dq.ConsumePeriod))
 	defer func() {
 		if err := recover(); err != nil {
-			tool.ErrorStack(err)
+			logr.L.Error(tool.ErrorStack(err))
 		}
 		ticker.Stop()
 		go q.loopConsume(handler)
@@ -197,7 +204,7 @@ func (q *Queue) loopPersist() {
 // CycleTime 轮询时间
 type CycleTime struct {
 	BeginTime string        // 开始时间
-	Type      int           // 1 循环 2 定时
+	Type      int           // 1 循环 2 定时 3 立即执行
 	Period    time.Duration // 循环时间间隔，单位分钟
 	TimePoint []string      // 定时时间点数组，12:34:56格式
 }
