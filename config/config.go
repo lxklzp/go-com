@@ -39,6 +39,7 @@ type config struct {
 	RateLimit   RateLimit
 	RateBreaker RateBreaker
 	Dq          Dq
+	Es          Es
 }
 
 type app struct {

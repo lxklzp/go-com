@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/robfig/cron/v3"
 	nebula "github.com/vesoft-inc/nebula-go/v3"
+	"go-com/core/es"
 	"go-com/core/kafka"
 	"go-com/core/service"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -22,3 +23,5 @@ var Es *elasticsearch.Client
 var KafkaP kafka.Kafka
 var KafkaCQ kafka.Kafka
 var Cron *cron.Cron
+
+var Es8 es.V8

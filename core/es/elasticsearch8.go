@@ -3,31 +3,21 @@ package es
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"go-com/config"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"go-com/core/logr"
 	"net/http"
-	"sync"
 	"time"
 )
 
-var ReqBufPool *sync.Pool
-
-type Config struct {
-	config.Es
+type V8 struct {
+	client *elasticsearch.Client
 }
 
-func init() {
-	ReqBufPool = &sync.Pool{
-		New: func() interface{} {
-			return bytes.NewBuffer(make([]byte, 0, 4096))
-		},
-	}
-}
-
-func NewEs(cfg Config) *elasticsearch.Client {
-	es, err := elasticsearch.NewClient(elasticsearch.Config{
+func NewEs8(cfg Config) V8 {
+	var err error
+	var v8 V8
+	v8.client, err = elasticsearch.NewClient(elasticsearch.Config{
 		Addresses: cfg.Addr,
 		Username:  cfg.User,
 		Password:  cfg.Password,
@@ -39,26 +29,7 @@ func NewEs(cfg Config) *elasticsearch.Client {
 	if err != nil {
 		logr.L.Fatal(err)
 	}
-	return es
-}
-
-type Base struct {
-	ScrollId     string `json:"_scroll_id"`
-	Hits         Hits   `json:"hits"`
-	Aggregations map[string]map[string]interface{}
-	Count        int `json:"count"`
-}
-
-type Hits struct {
-	Total HitsTotal                `json:"total"`
-	Hits  []map[string]interface{} `json:"hits"`
-}
-
-type HitsTotal struct {
-	Value int `json:"value"`
-}
-
-type Aggregations struct {
+	return v8
 }
 
 /*
@@ -95,7 +66,8 @@ sql示例：
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-04-18T19:22:00",
-	                            "lt": "2025-04-19T19:22:00"
+	                            "lt": "2025-04-19T19:22:00",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -104,7 +76,8 @@ sql示例：
 	    }
 	}
 */
-func SearchPagination(es *elasticsearch.Client, index string, sql string, handle func(data []map[string]interface{})) int {
+func (e V8) SearchPagination(index string, sql string, handle func(data []map[string]interface{})) int {
+	es := e.client
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -215,7 +188,8 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-06-24T09:22:00",
-	                            "lt": "2025-06-25T19:22:00"
+	                            "lt": "2025-06-25T19:22:00",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -224,7 +198,8 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	    }
 	}
 */
-func Search(es *elasticsearch.Client, index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {
+func (e V8) Search(index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {
+	es := e.client
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -263,7 +238,8 @@ sql示例：
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-05-19T14:58:55",
-	                            "lt": "2024-05-20T14:58:55"
+	                            "lt": "2024-05-20T14:58:55",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -272,7 +248,8 @@ sql示例：
 	    }
 	}
 */
-func Count(es *elasticsearch.Client, index string, sql string) int {
+func (e V8) Count(index string, sql string) int {
+	es := e.client
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -285,9 +262,13 @@ func Count(es *elasticsearch.Client, index string, sql string) int {
 		logr.L.Error(err)
 		return 0
 	}
-	logr.L.Info(respClient)
 	base := Base{}
 	json.NewDecoder(respClient.Body).Decode(&base)
 	respClient.Body.Close()
 	return base.Count
+}
+
+func (e V8) CreateIndex(index string, sql string) {
+	es := e.client
+	es.Indices.Create("es-8-tt")
 }

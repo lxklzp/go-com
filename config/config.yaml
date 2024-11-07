@@ -96,9 +96,9 @@ Nebula:
 
 Es:
   Addr:
-    - http://127.0.0.1:29042
+    - http://192.168.2.70:9200
   User: elastic
-  Password: e49S^cQG7m
+  Password: 123456
   DbConfig:
     MaxOpenConns: 200
     MaxIdleConns: 10
