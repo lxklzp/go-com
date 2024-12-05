@@ -14,18 +14,16 @@ type Config struct {
 }
 
 type Kafka struct {
-	Consumer           *queue.Consumer
-	Producer           *queue.Producer
-	cfgP               Config         // 生产者配置缓存
-	cfgC               Config         // 消费者配置缓存
-	L                  *logrus.Logger // 消费的消息日志，根据config.Kafka.LogExpire判断是否写日志
-	ConsumeWorkerNumCh chan bool
+	Consumer *queue.Consumer
+	Producer *queue.Producer
+	cfgP     Config         // 生产者配置缓存
+	cfgC     Config         // 消费者配置缓存
+	L        *logrus.Logger // 消费的消息日志，根据config.Kafka.LogExpire判断是否写日志
 }
 
 // InitConsumer offset：earliest、latest
 func (kafka *Kafka) InitConsumer(cfg Config, offset string) {
 	kafka.cfgC = cfg
-	kafka.ConsumeWorkerNumCh = make(chan bool, cfg.MaxConsumeWorkerNum)
 	// 创建kafka消费者
 	var err error
 	cfgMap := queue.ConfigMap{
@@ -78,7 +76,6 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 			kafka.L.Infof("[%s] [%s] [%s] %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Key), string(e.Value))
 		}
 		// 处理消息
-		kafka.ConsumeWorkerNumCh <- true
 		go func() {
 			e := e
 			key := e.Key
@@ -88,7 +85,6 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 				if err := recover(); err != nil {
 					tool.ErrorStack(err)
 				}
-				<-kafka.ConsumeWorkerNumCh
 
 				// 根据auto.commit.interval.ms配置自动提交消费者offset
 				_, err := kafka.Consumer.StoreMessage(e)

@@ -17,12 +17,16 @@ var KafkaTopicExampleResp = "example_resp"
 // 消费kafka
 func exampleResp() {
 	cfg := kafka.Config{Kafka: config.C.Kafka}
-	cfg.Topic = KafkaTopicExampleResp
-	cfg.Group = KafkaTopicExampleResp + "_group"
-	app.KafkaCQ.InitConsumer(cfg, "latest")
-	for {
-		app.KafkaCQ.Consume(func(key []byte, msg []byte, timestamp *time.Time) {
-			// TODO
-		})
+
+	for i := 0; i < cfg.MaxConsumeWorkerNum; i++ {
+		go func() {
+			var client kafka.Kafka
+			client.InitConsumer(cfg, "latest")
+			for {
+				client.Consume(func(key []byte, msg []byte, timestamp *time.Time) {
+					// TODO
+				})
+			}
+		}()
 	}
 }

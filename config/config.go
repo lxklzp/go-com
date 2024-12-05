@@ -97,7 +97,7 @@ type Kafka struct {
 	SaslMechanisms   string
 
 	LogExpire           int
-	MaxConsumeWorkerNum int32
+	MaxConsumeWorkerNum int
 }
 
 type Mysql struct {
@@ -168,6 +168,12 @@ type Es struct {
 	User     string
 	Password string
 	DbConfig DbConfig
+}
+
+type Ftp struct {
+	Addr     string
+	User     string
+	Password string
 }
 
 // 将配置参数格式化为内存数据结构

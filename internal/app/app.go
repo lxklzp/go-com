@@ -21,7 +21,6 @@ var Nb *nebula.SessionPool
 var SD *service.Discovery
 var Es *elasticsearch.Client
 var KafkaP kafka.Kafka
-var KafkaCQ kafka.Kafka
 var Cron *cron.Cron
 
 var Es8 es.V8

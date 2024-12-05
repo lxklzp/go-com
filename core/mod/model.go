@@ -26,11 +26,11 @@ type Base struct {
 }
 
 type PrimaryId struct {
-	ID int64 `json:"id"`
+	ID int `json:"id"`
 }
 
 type PrimaryIdName struct {
-	ID   int64  `json:"id"`
+	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 

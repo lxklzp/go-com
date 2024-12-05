@@ -38,7 +38,7 @@ func GenModel(db *gorm.DB, table []string, path string, dbDst *gorm.DB) {
 				continue
 			}
 			ok = true
-			g.ApplyBasic(g.GenerateModelAs(t, tool.SepNameToCamel(name), gen.WithMethod((&defaultPgModel{}).TableName)))
+			g.ApplyBasic(g.GenerateModelAs(t, tool.SepNameToCamel(name, true), gen.WithMethod((&defaultPgModel{}).TableName)))
 		} else {
 			ok = true
 			g.ApplyBasic(g.GenerateModel(t))

@@ -195,7 +195,10 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	                }
 	            ]
 	        }
-	    }
+	    },
+		"sort":{
+			"@timestamp":"desc"
+		}
 	}
 */
 func (e V8) Search(index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {

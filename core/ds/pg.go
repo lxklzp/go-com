@@ -97,7 +97,7 @@ func main() {
 		// 表不存在则创建
 		if len(rows) == 0 {
 			tableNeedCreate += t + ","
-			code += fmt.Sprintf("\tif err = migrator.CreateTable(&model.%s{}); err != nil {\n\t\tlogr.L.Panic(err)\n\t}\n", tool.SepNameToCamel(t))
+			code += fmt.Sprintf("\tif err = migrator.CreateTable(&model.%s{}); err != nil {\n\t\tlogr.L.Panic(err)\n\t}\n", tool.SepNameToCamel(t, true))
 		}
 	}
 	code += "}"

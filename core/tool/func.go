@@ -117,6 +117,9 @@ func RespData(code int, message string, data interface{}) ResponseData {
 }
 
 func CamelToSepName(field string, sep rune) string {
+	if field == "" {
+		return ""
+	}
 	var buffer []rune
 	for i, r := range []rune(field) {
 		if unicode.IsUpper(r) {
@@ -131,13 +134,21 @@ func CamelToSepName(field string, sep rune) string {
 	return string(buffer)
 }
 
-func SepNameToCamel(field string) string {
-	return strings.ReplaceAll(cases.Title(language.English).String(strings.ReplaceAll(strings.ToLower(field), "_", " ")), " ", "")
+func SepNameToCamel(field string, isUcFirst bool) string {
+	if field == "" {
+		return ""
+	}
+	name := strings.ReplaceAll(cases.Title(language.English).String(strings.ReplaceAll(strings.ToLower(field), "_", " ")), " ", "")
+	if isUcFirst {
+		return name
+	}
+	return strings.ToLower(name[:1]) + name[1:]
 }
 
 func httpReqResp(req *http.Request, url string, param interface{}) ([]byte, error) {
 	// 请求
 	client := &http.Client{}
+	client.Timeout = time.Minute
 	resp, err := client.Do(req)
 	if resp != nil {
 		defer resp.Body.Close()

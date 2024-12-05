@@ -6,7 +6,9 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"go-com/core/logr"
+	"go-com/internal/app"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -60,7 +62,8 @@ sql示例：
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-04-18T19:22:00",
-	                            "lt": "2025-04-19T19:22:00"
+	                            "lt": "2025-04-19T19:22:00",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -180,7 +183,8 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-06-24T09:22:00",
-	                            "lt": "2025-06-25T19:22:00"
+	                            "lt": "2025-06-25T19:22:00",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -231,7 +235,8 @@ sql示例：
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-05-19T14:58:55",
-	                            "lt": "2024-05-20T14:58:55"
+	                            "lt": "2024-05-20T14:58:55",
+								"time_zone": "+08:00"
 	                        }
 	                    }
 	                }
@@ -258,4 +263,22 @@ func Count(es *elasticsearch.Client, index string, sql string) int {
 	json.NewDecoder(respClient.Body).Decode(&base)
 	respClient.Body.Close()
 	return base.Count
+}
+
+/*
+CreateIndex 创建索引
+
+	{
+	    "mappings": {
+	        "properties": {
+	            "@timestamp": {
+	                "type": "date"
+	            }
+	        }
+	    }
+	}
+*/
+func CreateIndex(es *elasticsearch.Client, index string, body string) error {
+	_, err := es.Indices.Create(index, app.Es.Indices.Create.WithBody(strings.NewReader(body)))
+	return err
 }
