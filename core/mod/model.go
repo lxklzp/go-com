@@ -16,13 +16,19 @@ import (
 )
 
 const MaxPageRead = 5000
+const MaxRead = 500000
 const MaxPageWrite = 200
 
+const AllNumber = -1000
+
 type Base struct {
-	TimeFrom string `gorm:"-" json:"time_from"`
-	TimeTo   string `gorm:"-" json:"time_to"`
-	Page     int    `gorm:"-" json:"pageNo"`
-	PageSize int    `gorm:"-" json:"pageSize"`
+	TimeFrom     string        `gorm:"-" json:"time_from"`
+	TimeTo       string        `gorm:"-" json:"time_to"`
+	Page         int           `gorm:"-" json:"pageNo"`
+	PageSize     int           `gorm:"-" json:"pageSize"`
+	ExportTitle  string        `gorm:"-" json:"export_title"`
+	ExportHeader []interface{} `gorm:"-" json:"export_header"`
+	ExportField  []string      `gorm:"-" json:"export_field"`
 }
 
 type PrimaryId struct {
@@ -146,7 +152,11 @@ func ExcelExport(name string, title []interface{}, readTable func(page int, page
 	table = readTable(1, MaxPageRead, true)
 
 	// 第一页有数据
-	if table.Count != int64(0) {
+	if table.Count != 0 {
+		// 设置最大下载数目限制
+		if table.Count > MaxRead {
+			table.Count = MaxRead
+		}
 		// 将第一页数据写入excel
 		streamWrite(stream, table, &rowNext)
 		// 总页数

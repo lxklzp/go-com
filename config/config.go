@@ -31,7 +31,8 @@ type config struct {
 	App         app
 	Postgresql  Postgresql
 	Clickhouse  Clickhouse
-	Kafka       Kafka
+	KafkaP      Kafka
+	KafkaC      Kafka
 	Mysql       Mysql
 	Redis       Redis
 	Etcd        Etcd

@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -660,4 +661,31 @@ func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holi
 		period += int(timeTo.Sub(dateTo) / time.Second)
 	}
 	return period, nil
+}
+
+// StructToMap 结构体转map
+func StructToMap(in interface{}, tagName string) (map[string]interface{}, error) {
+	out := make(map[string]interface{})
+
+	v := reflect.ValueOf(in)
+	if v.Kind() != reflect.Struct { // 非结构体返回错误提示
+		return nil, fmt.Errorf("StructToMap 只支持结构体，不支持 %T", v)
+	}
+
+	t := v.Type()
+	// 遍历结构体字段
+	// 指定tagName值为map中key;字段值为map中value
+	for i := 0; i < v.NumField(); i++ {
+		fi := t.Field(i)
+		// 递归处理嵌套结构体
+		if v.Field(i).Kind() == reflect.Struct {
+			outChild, _ := StructToMap(v.Field(i).Interface(), tagName)
+			for childK, childV := range outChild {
+				out[childK] = childV
+			}
+		} else if tagValue := fi.Tag.Get(tagName); tagValue != "" {
+			out[tagValue] = v.Field(i).Interface()
+		}
+	}
+	return out, nil
 }

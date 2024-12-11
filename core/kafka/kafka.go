@@ -76,24 +76,21 @@ func (kafka *Kafka) Consume(handler func(key []byte, msg []byte, timestamp *time
 			kafka.L.Infof("[%s] [%s] [%s] %s", time.Now().Format(config.DateTimeFormatter), e.TopicPartition, string(e.Key), string(e.Value))
 		}
 		// 处理消息
-		go func() {
-			e := e
-			key := e.Key
-			value := e.Value
-			timestamp := e.Timestamp
-			defer func() {
-				if err := recover(); err != nil {
-					tool.ErrorStack(err)
-				}
+		key := e.Key
+		value := e.Value
+		timestamp := e.Timestamp
+		defer func() {
+			if err := recover(); err != nil {
+				tool.ErrorStack(err)
+			}
 
-				// 根据auto.commit.interval.ms配置自动提交消费者offset
-				_, err := kafka.Consumer.StoreMessage(e)
-				if err != nil {
-					logr.L.Errorf("[kafka] 消费者 StoreMessage错误 %+v", err)
-				}
-			}()
-			handler(key, value, &timestamp)
+			// 根据auto.commit.interval.ms配置自动提交消费者offset
+			_, err := kafka.Consumer.StoreMessage(e)
+			if err != nil {
+				logr.L.Errorf("[kafka] 消费者 StoreMessage错误 %+v", err)
+			}
 		}()
+		handler(key, value, &timestamp)
 	case queue.Error:
 		logr.L.Errorf("[kafka] 消费者 错误 %+v", e)
 	}

@@ -1,0 +1,93 @@
+DigitalLifeIndexTimeType:
+  1: 日值
+  2: 月值
+  3: 按分钟值
+  4: 按小时值
+
+FtpDeliveryBindingChannel:
+  0: 看家
+  1: 云眼
+
+FtpDeliveryIsAi:
+  0: 设备未绑定AI套餐
+  1: 设备已绑定AI套餐
+
+FtpDeliveryIsCloud:
+  0: 设备未绑定云回看套餐
+  1: 设备绑定全天云回看
+  2: 设备绑定事件云回看
+
+FtpDeliveryIsNetworkQuality:
+  0: 是
+  1: 否
+
+FtpDeliveryIsCloudvideoUploadQuality:
+  0: 是
+  1: 否
+  2: 未绑定云回看
+
+FtpDeliveryIsAdmin:
+  0: 未开通
+  1: 已开通
+
+FtpDeliveryDeviceSource:
+  1: 天翼云眼绑定
+  2: 天翼看家级联
+  3: 省平台级联
+  4: 第三方平台级联
+
+FtpDeliveryIsGiven:
+  0: 否
+  1: 是
+
+FtpDeliveryRelyTree:
+  1: 业务树
+  2: 行业树
+
+CloudvideoUploadBindSource:
+  0: 小翼管家
+  1: 天翼云眼
+
+CloudvideoUploadIndustryFlag:
+  1: 公众版订单
+  2: 行业版订单
+  4: 线上订单
+
+DeviceOfflineQualityBrdSource:
+  0: 平台记录
+  1: 3A反查
+
+DeviceOfflineQualityAccessProtocol:
+  0: 企标
+  1: 国标
+  2: 社标
+  3: 其他
+
+ShiLianQualityCity:
+  - 黔南布依族苗族自治州
+  - 黔东南苗族侗族自治州
+  - 毕节地区
+  - 黔西南布依族苗族自治州
+  - 铜仁地区
+  - 安顺市
+  - 遵义市
+  - 六盘水市
+  - 贵阳市
+  - 其他
+
+# 每个地市查询设备信息的条数
+DeviceInfoCityGetCount: 5
+
+BandwidthMsgLevel:
+  0: 正常
+  1: 轻微感知
+  2: 严重感知
+  3: 无法使用
+  4: 其他
+
+DeviceOnlineStatus:
+  -1000: 全部
+  0: 离线
+  1: 在线
+  2: 休眠（摄像头,门铃）
+  3: 休眠（保活门铃休眠）

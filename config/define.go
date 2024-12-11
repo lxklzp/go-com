@@ -123,7 +123,6 @@ type RouterApi struct {
 }
 
 var RouterApiList []RouterApi
-var RouterApiWebList []RouterApi
 
 func camelToSepName(field string, sep rune) string {
 	var buffer []rune
