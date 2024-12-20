@@ -545,7 +545,7 @@ func (s SortStringList) Less(i, j int) bool {
 }
 func (s SortStringList) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
-// MapSortString 对map数组进行float排序，sortType：1 升序 2 降序
+// MapSortString 对map数组进行string排序，sortType：1 升序 2 降序
 func MapSortString(mList []map[string]interface{}, sortField string, sortType int) []map[string]interface{} {
 	// 参数验证
 	if len(mList) == 0 || sortField == "" || (sortType != 1 && sortType != 2) {
@@ -661,6 +661,18 @@ func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holi
 		period += int(timeTo.Sub(dateTo) / time.Second)
 	}
 	return period, nil
+}
+
+// TimeFromToSeconds 获取两个时间段之间的时间，单位秒
+func TimeFromToSeconds(timeFromStr string, timeToStr string) int {
+	if timeFromStr == "" || timeToStr == "" {
+		return 0
+	} else {
+		var timeFrom, timeTo time.Time
+		timeFrom, _ = time.ParseInLocation(config.DateTimeFormatter, timeFromStr, time.Local)
+		timeTo, _ = time.ParseInLocation(config.DateTimeFormatter, timeToStr, time.Local)
+		return int(timeTo.Sub(timeFrom).Seconds())
+	}
 }
 
 // StructToMap 结构体转map

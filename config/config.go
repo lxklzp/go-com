@@ -41,6 +41,7 @@ type config struct {
 	RateBreaker RateBreaker
 	Dq          Dq
 	Es          Es
+	Ftp         Ftp
 }
 
 type app struct {

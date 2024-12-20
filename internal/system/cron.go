@@ -23,8 +23,8 @@ func CronRun() {
 		logr.L.Error(err)
 	}
 
-	logr.L.Info("定时任务启动成功")
 	app.Cron.Start()
+	logr.L.Info("定时任务启动成功")
 }
 
 type cronLog struct {

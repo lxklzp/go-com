@@ -136,3 +136,8 @@ Dq:
   CheckNoExist: true
   # 判断执行中的消息的no是否存在
   CheckNoRunningExist: true
+
+Ftp:
+  Addr: 127.0.0.1:19763
+  User: ftp_lliao
+  Password: Gj_dd-e112
