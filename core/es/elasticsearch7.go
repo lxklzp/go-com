@@ -3,10 +3,13 @@ package es
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/pkg/errors"
+	"go-com/config"
 	"go-com/core/logr"
-	"go-com/internal/app"
+	"go-com/core/tool"
 	"net/http"
 	"strings"
 	"time"
@@ -62,8 +65,7 @@ sql示例：
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-04-18T19:22:00",
-	                            "lt": "2025-04-19T19:22:00",
-								"time_zone": "+08:00"
+	                            "lt": "2025-04-19T19:22:00"
 	                        }
 	                    }
 	                }
@@ -73,6 +75,7 @@ sql示例：
 	}
 */
 func SearchPagination(es *elasticsearch.Client, index string, sql string, handle func(data []map[string]interface{})) int {
+	logr.L.Debug(sql)
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -91,6 +94,7 @@ func SearchPagination(es *elasticsearch.Client, index string, sql string, handle
 	json.NewDecoder(respSearch.Body).Decode(&base)
 	respSearch.Body.Close()
 	total := base.Hits.Total.Value
+	logr.L.Debug(total)
 	handle(base.Hits.Hits)
 
 	// 分页查询 scroll
@@ -183,8 +187,7 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	                    "range": {
 	                        "@timestamp": {
 	                            "gte": "2024-06-24T09:22:00",
-	                            "lt": "2025-06-25T19:22:00",
-								"time_zone": "+08:00"
+	                            "lt": "2025-06-25T19:22:00"
 	                        }
 	                    }
 	                }
@@ -197,6 +200,7 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	}
 */
 func Search(es *elasticsearch.Client, index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {
+	logr.L.Debug(sql)
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -214,6 +218,7 @@ func Search(es *elasticsearch.Client, index string, sql string) (int, []map[stri
 	}
 	json.NewDecoder(respSearch.Body).Decode(&base)
 	respSearch.Body.Close()
+	logr.L.Debug(base.Hits.Total.Value)
 	return base.Hits.Total.Value, base.Hits.Hits, base.Aggregations
 }
 
@@ -234,9 +239,9 @@ sql示例：
 	                {
 	                    "range": {
 	                        "@timestamp": {
+								"time_zone": "+08:00",
 	                            "gte": "2024-05-19T14:58:55",
-	                            "lt": "2024-05-20T14:58:55",
-								"time_zone": "+08:00"
+	                            "lt": "2024-05-20T14:58:55"
 	                        }
 	                    }
 	                }
@@ -246,6 +251,7 @@ sql示例：
 	}
 */
 func Count(es *elasticsearch.Client, index string, sql string) int {
+	logr.L.Debug(sql)
 	// 查询语句转buf
 	buffer := ReqBufPool.Get().(*bytes.Buffer)
 	defer func() {
@@ -258,10 +264,10 @@ func Count(es *elasticsearch.Client, index string, sql string) int {
 		logr.L.Error(err)
 		return 0
 	}
-	logr.L.Info(respClient)
 	base := Base{}
 	json.NewDecoder(respClient.Body).Decode(&base)
 	respClient.Body.Close()
+	logr.L.Debug(base)
 	return base.Count
 }
 
@@ -279,6 +285,119 @@ CreateIndex 创建索引
 	}
 */
 func CreateIndex(es *elasticsearch.Client, index string, body string) error {
-	_, err := es.Indices.Create(index, app.Es.Indices.Create.WithBody(strings.NewReader(body)))
+	_, err := es.Indices.Create(index, es.Indices.Create.WithBody(strings.NewReader(body)))
 	return err
+}
+
+func DeleteIndex(es *elasticsearch.Client, index string) error {
+	_, err := es.Indices.Delete([]string{index})
+	return err
+}
+
+type bulkResponse struct {
+	Errors bool `json:"errors"`
+	Items  []struct {
+		Index struct {
+			ID     string `json:"_id"`
+			Result string `json:"result"`
+			Status int    `json:"status"`
+			Error  struct {
+				Type   string `json:"type"`
+				Reason string `json:"reason"`
+				Cause  struct {
+					Type   string `json:"type"`
+					Reason string `json:"reason"`
+				} `json:"caused_by"`
+			} `json:"error"`
+		} `json:"index"`
+	} `json:"items"`
+}
+
+// BatchInsert 批量写入
+func BatchInsert(es *elasticsearch.Client, index string, data []map[string]interface{}) {
+	bsBuf := config.BufPool.Get().(*bytes.Buffer)
+	defer func() {
+		bsBuf.Reset()
+		config.BufPool.Put(bsBuf)
+	}()
+	encoder := json.NewEncoder(bsBuf)
+	encoder.SetEscapeHTML(false)
+
+	var dataJson []byte
+	var i int
+	pageSize := 1000
+	for _, d := range data {
+		i++
+		encoder.Encode(d)
+		dataJson = append(dataJson, []byte(fmt.Sprintf(`{"index":{"_id":"%d"}}%s`, tool.SnowflakeComm.GetId(), "\n"))...)
+		dataJson = append(dataJson, bsBuf.Bytes()...)
+		bsBuf.Reset()
+		dataJson = append(dataJson, "\n"...)
+		if i >= pageSize {
+			insert(es, index, dataJson)
+			dataJson = dataJson[:0]
+			i = 0
+		}
+	}
+
+	if len(dataJson) > 0 {
+		insert(es, index, dataJson)
+	}
+}
+
+// 批量写入一轮
+func insert(es *elasticsearch.Client, index string, dataJson []byte) {
+	res, err := es.Bulk(bytes.NewReader(dataJson), es.Bulk.WithIndex(index))
+	var blk *bulkResponse
+	var raw map[string]interface{}
+	if err != nil {
+		logr.L.Error(err)
+		return
+	}
+	if res == nil {
+		logr.L.Error("elasticsearch bulk 写入的返回结果为空")
+		return
+	}
+	if res.IsError() {
+		if err = json.NewDecoder(res.Body).Decode(&raw); err != nil {
+			logr.L.Error(err)
+			return
+		} else {
+			logr.L.Errorf("[%d] %s: %s", res.StatusCode,
+				raw["error"].(map[string]interface{})["type"],
+				raw["error"].(map[string]interface{})["reason"])
+			return
+		}
+	} else {
+		if err = json.NewDecoder(res.Body).Decode(&blk); err != nil {
+			logr.L.Error(err)
+			return
+		} else {
+			for _, d := range blk.Items {
+				if d.Index.Status > 201 {
+					logr.L.Errorf("[%d]: %s: %s: %s: %s", d.Index.Status,
+						d.Index.Error.Type,
+						d.Index.Error.Reason,
+						d.Index.Error.Cause.Type,
+						d.Index.Error.Cause.Reason)
+				}
+			}
+		}
+	}
+
+	res.Body.Close()
+}
+
+func Delete(es *elasticsearch.Client, index string, sql string) error {
+	res, err := es.DeleteByQuery([]string{index}, bytes.NewReader([]byte(sql)))
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return errors.New("elasticsearch delete_by_query 返回结果为空")
+	}
+	if res.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("%s", res))
+	}
+	return nil
 }

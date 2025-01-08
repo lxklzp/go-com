@@ -690,7 +690,8 @@ func StructToMap(in interface{}, tagName string) (map[string]interface{}, error)
 	for i := 0; i < v.NumField(); i++ {
 		fi := t.Field(i)
 		// 递归处理嵌套结构体
-		if v.Field(i).Kind() == reflect.Struct {
+		typeName := t.Field(i).Type.Name()
+		if v.Field(i).Kind() == reflect.Struct && typeName != "Timestamp" && typeName != "JSON" {
 			outChild, _ := StructToMap(v.Field(i).Interface(), tagName)
 			for childK, childV := range outChild {
 				out[childK] = childV
