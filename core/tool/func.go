@@ -39,8 +39,8 @@ func ExitNotify(close func()) {
 		for s := range ch {
 			switch s {
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL:
-				logr.L.Info("关闭系统")
 				close()
+				logr.L.Info("关闭系统")
 				os.Exit(0)
 			}
 		}

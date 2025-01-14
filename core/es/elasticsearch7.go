@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"github.com/pkg/errors"
 	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
@@ -285,12 +284,14 @@ CreateIndex 创建索引
 	}
 */
 func CreateIndex(es *elasticsearch.Client, index string, body string) error {
-	_, err := es.Indices.Create(index, es.Indices.Create.WithBody(strings.NewReader(body)))
+	resp, err := es.Indices.Create(index, es.Indices.Create.WithBody(strings.NewReader(body)))
+	logr.L.Debug(resp)
 	return err
 }
 
 func DeleteIndex(es *elasticsearch.Client, index string) error {
-	_, err := es.Indices.Delete([]string{index})
+	resp, err := es.Indices.Delete([]string{index})
+	logr.L.Debug(resp)
 	return err
 }
 
@@ -326,8 +327,10 @@ func BatchInsert(es *elasticsearch.Client, index string, data []map[string]inter
 	var dataJson []byte
 	var i int
 	pageSize := 1000
+	timestamp := time.Now().Format(config.DateTimeStandardFormatter)
 	for _, d := range data {
 		i++
+		d["@timestamp"] = timestamp
 		encoder.Encode(d)
 		dataJson = append(dataJson, []byte(fmt.Sprintf(`{"index":{"_id":"%d"}}%s`, tool.SnowflakeComm.GetId(), "\n"))...)
 		dataJson = append(dataJson, bsBuf.Bytes()...)
@@ -337,6 +340,7 @@ func BatchInsert(es *elasticsearch.Client, index string, data []map[string]inter
 			insert(es, index, dataJson)
 			dataJson = dataJson[:0]
 			i = 0
+			timestamp = time.Now().Format(config.DateTimeStandardFormatter)
 		}
 	}
 
@@ -386,18 +390,4 @@ func insert(es *elasticsearch.Client, index string, dataJson []byte) {
 	}
 
 	res.Body.Close()
-}
-
-func Delete(es *elasticsearch.Client, index string, sql string) error {
-	res, err := es.DeleteByQuery([]string{index}, bytes.NewReader([]byte(sql)))
-	if err != nil {
-		return err
-	}
-	if res == nil {
-		return errors.New("elasticsearch delete_by_query 返回结果为空")
-	}
-	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("%s", res))
-	}
-	return nil
 }

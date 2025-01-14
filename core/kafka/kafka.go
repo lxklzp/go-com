@@ -1,7 +1,9 @@
 package kafka
 
 import (
-	queue "github.com/confluentinc/confluent-kafka-go/kafka"
+	"context"
+	queue "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go-com/config"
 	"go-com/core/logr"
@@ -16,8 +18,10 @@ type Config struct {
 type Kafka struct {
 	Consumer *queue.Consumer
 	Producer *queue.Producer
+	Admin    *queue.AdminClient
 	cfgP     Config         // 生产者配置缓存
 	cfgC     Config         // 消费者配置缓存
+	cfgA     Config         // 管理员配置缓存
 	L        *logrus.Logger // 消费的消息日志，根据config.Kafka.LogExpire判断是否写日志
 }
 
@@ -177,4 +181,101 @@ func (kafka *Kafka) Produce(key []byte, data []byte, topic string) {
 
 func (kafka *Kafka) CloseProducer() {
 	kafka.Producer.Close()
+}
+
+func (kafka *Kafka) InitAdmin(cfg Config) error {
+	var err error
+	kafka.cfgA = cfg
+	// 建立连接
+	cfgMap := queue.ConfigMap{
+		"bootstrap.servers": cfg.Servers,
+	}
+	if cfg.Username != "" {
+		cfgMap["security.protocol"] = cfg.SecurityProtocol
+		if cfgMap["security.protocol"] == "" {
+			cfgMap["security.protocol"] = "SASL_PLAINTEXT"
+		}
+		cfgMap["sasl.mechanisms"] = cfg.SaslMechanisms
+		if cfgMap["sasl.mechanisms"] == "" {
+			cfgMap["sasl.mechanisms"] = "PLAIN"
+		}
+		cfgMap["sasl.username"] = cfg.Username
+		cfgMap["sasl.password"] = cfg.Password
+	}
+
+	kafka.Admin, err = queue.NewAdminClient(&cfgMap)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (kafka *Kafka) CloseAdmin() {
+	kafka.Admin.Close()
+}
+
+// Offset 偏移量
+type Offset struct {
+	Partition   int `json:"partition"`
+	OffsetMsg   int `json:"offset_msg"`
+	OffsetGroup int `json:"offset_group"`
+}
+
+func (kafka *Kafka) AdminBacklog(partitionCount int) (map[int]Offset, error) {
+	// 初始化数据
+	ctx := context.TODO()
+	offset := make(map[int]Offset)
+	topicPartitionOffsets := make(map[queue.TopicPartition]queue.OffsetSpec)
+	partitions := make([]queue.TopicPartition, 0, partitionCount)
+	for i := 0; i < partitionCount; i++ {
+		topicPartitionOffsets[queue.TopicPartition{
+			Topic:     &kafka.cfgA.Topic,
+			Partition: int32(i),
+		}] = queue.LatestOffsetSpec
+
+		partitions = append(partitions, queue.TopicPartition{
+			Topic:     &kafka.cfgA.Topic,
+			Partition: int32(i),
+		})
+
+		offset[i] = Offset{
+			Partition:   i,
+			OffsetMsg:   0,
+			OffsetGroup: 0,
+		}
+	}
+
+	// 获取消息偏移量
+	resMsg, err := kafka.Admin.ListOffsets(ctx, topicPartitionOffsets, queue.SetAdminIsolationLevel(queue.IsolationLevelReadCommitted))
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取消费者组偏移量
+	gps := []queue.ConsumerGroupTopicPartitions{
+		{
+			Group:      kafka.cfgA.Group,
+			Partitions: partitions,
+		},
+	}
+	resGroup, err := kafka.Admin.ListConsumerGroupOffsets(ctx, gps, queue.SetAdminRequireStableOffsets(true))
+	if err != nil {
+		return nil, err
+	}
+	if len(resGroup.ConsumerGroupsTopicPartitions) == 0 {
+		return nil, errors.New("没有查询到消费者组的偏移量")
+	}
+
+	// 生成偏移量数据
+	for k, v := range resMsg.ResultInfos {
+		o := offset[int(k.Partition)]
+		o.OffsetMsg = int(v.Offset)
+		offset[int(k.Partition)] = o
+	}
+	for _, v := range resGroup.ConsumerGroupsTopicPartitions[0].Partitions {
+		o := offset[int(v.Partition)]
+		o.OffsetGroup = int(v.Offset)
+		offset[int(v.Partition)] = o
+	}
+	return offset, nil
 }

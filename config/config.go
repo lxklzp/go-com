@@ -169,6 +169,7 @@ type Es struct {
 	Addr     []string
 	User     string
 	Password string
+	Prefix   string
 	DbConfig DbConfig
 }
 

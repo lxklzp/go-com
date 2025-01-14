@@ -99,6 +99,7 @@ Es:
     - http://192.168.2.70:9200
   User: elastic
   Password: 123456
+  Prefix:
   DbConfig:
     MaxOpenConns: 200
     MaxIdleConns: 10

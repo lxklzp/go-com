@@ -24,13 +24,14 @@ const (
 )
 
 const (
-	Version                 = "v1.0.1"
-	DateTimeFormatter       = "2006-01-02 15:04:05"
-	DateFormatter           = "2006-01-02"
-	TimeFormatter           = "15:04:05"
-	MonthNumberFormatter    = "200601"
-	DateTimeNumberFormatter = "20060102150405"
-	DateNumberFormatter     = "20060102"
+	Version                   = "v1.0.1"
+	DateTimeFormatter         = "2006-01-02 15:04:05"
+	DateTimeStandardFormatter = "2006-01-02T15:04:05"
+	DateFormatter             = "2006-01-02"
+	TimeFormatter             = "15:04:05"
+	MonthNumberFormatter      = "200601"
+	DateTimeNumberFormatter   = "20060102150405"
+	DateNumberFormatter       = "20060102"
 
 	RedisErrNil = "redis: nil"
 	Sep         = "?#"
