@@ -150,7 +150,7 @@ func AddRouterApi(ctl interface{}, routerApiList *[]RouterApi) {
 		methodName := ty.Method(i).Name
 		if strings.HasPrefix(methodName, "Action") {
 			pathAction := camelToSepName(strings.TrimPrefix(methodName, "Action"), '-')
-			routerApi.Path = pathCtl + "/" + pathAction
+			routerApi.Path = C.App.Prefix + "/" + pathCtl + "/" + pathAction
 			routerApi.Action = value.Method(i).Interface().(func(c *gin.Context) interface{})
 			*routerApiList = append(*routerApiList, routerApi)
 		}

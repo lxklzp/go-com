@@ -14,6 +14,7 @@
 * 数据同步：pg2my
 * 日志（sirupsen/logrus）
 * 加密：rsa、https证书、aes、3des、md5
+* 缓存存储
 * 版本号
 * 打包
 
