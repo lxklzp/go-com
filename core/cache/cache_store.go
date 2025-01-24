@@ -19,8 +19,8 @@ type cacheStore struct {
 const (
 	CacheStoreCacheMax = 5000
 
-	CacheStoreStatusFree  = 1
-	CacheStoreStatusStore = 2
+	CacheStoreStatusFree  = 0
+	CacheStoreStatusStore = 1
 )
 
 // Append 追加
@@ -50,15 +50,18 @@ func (al *cacheStore) storeAndReset() {
 	al.status = CacheStoreStatusStore
 
 	go func() {
-		al.store(list)
+		al.store(list, false)
 	}()
 }
 
 // store 存储
-func (al *cacheStore) store(list []interface{}) {
+func (al *cacheStore) store(list []interface{}, isExit bool) {
 	var err error
 	if err = app.Mysql.Create(list).Error; err != nil {
 		logr.L.Error(err)
+	}
+	if isExit {
+		return
 	}
 
 	al.lock.Lock()
@@ -66,10 +69,22 @@ func (al *cacheStore) store(list []interface{}) {
 	al.status = CacheStoreStatusFree
 }
 
-// StoreOnce 供定时任务调用
-func (al *cacheStore) StoreOnce() {
+// StoreForCron 供定时任务调用
+func (al *cacheStore) StoreForCron() {
 	al.lock.Lock()
 	defer al.lock.Unlock()
 
 	al.storeAndReset()
+}
+
+// StoreForExit 程序退出时调用
+func (al *cacheStore) StoreForExit() {
+	al.lock.Lock()
+	defer al.lock.Unlock()
+
+	if len(al.list) == 0 {
+		return
+	}
+
+	al.store(al.list, true)
 }

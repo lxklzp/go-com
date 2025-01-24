@@ -6,13 +6,23 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
+	"github.com/pkg/errors"
 	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
+
+func init() {
+	ReqBufPool = &sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 4096))
+		},
+	}
+}
 
 func NewEs(cfg Config) *elasticsearch.Client {
 	es, err := elasticsearch.NewClient(elasticsearch.Config{
@@ -192,10 +202,7 @@ Search 查询：相等 大小于 in 取反；聚合函数（"size":0）：avg ma
 	                }
 	            ]
 	        }
-	    },
-		"sort":{
-			"@timestamp":"desc"
-		}
+	    }
 	}
 */
 func Search(es *elasticsearch.Client, index string, sql string) (int, []map[string]interface{}, map[string]map[string]interface{}) {
@@ -295,6 +302,25 @@ func DeleteIndex(es *elasticsearch.Client, index string) error {
 	return err
 }
 
+func IndexExists(es *elasticsearch.Client, index string) bool {
+	resp, err := es.Indices.Exists([]string{index})
+
+	if err != nil {
+		logr.L.Error(err)
+		return false
+	}
+	if resp == nil {
+		logr.L.Error("elasticsearch indices-exists 的返回结果为空")
+		return false
+	}
+
+	if resp.StatusCode == 200 {
+		return true
+	} else {
+		return false
+	}
+}
+
 type bulkResponse struct {
 	Errors bool `json:"errors"`
 	Items  []struct {
@@ -390,4 +416,18 @@ func insert(es *elasticsearch.Client, index string, dataJson []byte) {
 	}
 
 	res.Body.Close()
+}
+
+func Delete(es *elasticsearch.Client, index string, sql string) error {
+	res, err := es.DeleteByQuery([]string{index}, bytes.NewReader([]byte(sql)))
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return errors.New("elasticsearch delete_by_query 返回结果为空")
+	}
+	if res.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("%s", res))
+	}
+	return nil
 }

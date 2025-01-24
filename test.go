@@ -1,12 +1,12 @@
 package main
 
 import (
-	"go-com/config"
-	"go-com/core/logr"
+	"fmt"
+	"sync/atomic"
 )
 
 func main() {
-	config.Load()
-	logr.InitLog("test")
-
+	supfileindex := int32(2)
+	atomic.CompareAndSwapInt32(&supfileindex, int32(2), 1)
+	fmt.Println(supfileindex)
 }
