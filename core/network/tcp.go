@@ -1,4 +1,4 @@
-package internet
+package network
 
 import (
 	"go-com/config"

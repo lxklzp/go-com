@@ -76,7 +76,7 @@ Mysql:
 Redis:
   Addr: 192.168.2.70:6379
   Password: mypass
-  Db: 0
+  Db: 0Update
 
 Etcd:
   Addr:

@@ -163,7 +163,7 @@ func httpReqResp(req *http.Request, url string, param interface{}) ([]byte, erro
 	logr.L.Debugf("请求 %s:%s\n响应 [%d] %s", url, param, resp.StatusCode, result)
 	if err != nil {
 		return nil, err
-	} else if resp.StatusCode != http.StatusOK {
+	} else if (resp.StatusCode < http.StatusOK) || (resp.StatusCode > 299) {
 		return result, errors.New("服务器异常，响应码：" + strconv.Itoa(resp.StatusCode))
 	} else {
 		return result, nil
@@ -239,14 +239,12 @@ func Long2IPString(i uint) (string, error) {
 	return ip.String(), nil
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const LetterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func RandString(n int) string {
 	b := make([]byte, n)
-	length := int64(len(letterBytes))
 	for i := range b {
-
-		b[i] = letterBytes[rand.Int63()%length]
+		b[i] = LetterBytes[rand.Intn(62)]
 	}
 	return string(b)
 }
@@ -383,6 +381,20 @@ func SliceIntToString(sliceInt []int) []string {
 		sliceString = append(sliceString, strconv.Itoa(i))
 	}
 	return sliceString
+}
+
+// SliceIsSubset 判断是否是子集
+func SliceIsSubset[T int | string](sub []T, super []T) bool {
+	superMap := make(map[T]bool)
+	for _, v := range super {
+		superMap[v] = true
+	}
+	for _, v := range sub {
+		if !superMap[v] {
+			return false
+		}
+	}
+	return true
 }
 
 // MapIntersect 求map[T]bool的交集

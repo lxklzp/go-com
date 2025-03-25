@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"go-com/config"
+	"go-com/core/logr"
+	"golang.org/x/crypto/bcrypt"
 	"math/big"
 	"os"
 	"time"
@@ -244,7 +246,21 @@ func AesDecrypt(ciphertext string, key []byte, iv []byte) ([]byte, error) {
 
 /***** 编码 *****/
 
-// Md5Encrypt md5编码
-func Md5Encrypt(plain string) string {
+// MD5Encrypt md5编码
+func MD5Encrypt(plain string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(plain)))
+}
+
+// BcryptEncode bcrypt算法加密密码
+func BcryptEncode(password string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		logr.L.Error(err)
+	}
+	return string(hash)
+}
+
+// BcryptVerify bcrypt算法验证密码
+func BcryptVerify(password string, hash string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }

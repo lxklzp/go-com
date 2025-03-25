@@ -13,7 +13,10 @@ func bind(r *gin.Engine) {
 	for _, routerApi := range config.RouterApiList {
 		routerApi := routerApi
 		r.POST(routerApi.Path, func(c *gin.Context) {
-			c.JSON(http.StatusOK, routerApi.Action(c))
+			respData := routerApi.Action(c)
+			if respData != nil {
+				c.JSON(http.StatusOK, respData)
+			}
 		})
 	}
 
