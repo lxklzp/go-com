@@ -2,6 +2,8 @@ package tool
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
@@ -310,8 +312,8 @@ func SearchJsonOnceByKey(object interface{}, key string) interface{} {
 	return config.Sep
 }
 
-// FormatStandardTime 格式化标准时间字符串
-func FormatStandardTime(t string) string {
+// FormatFromTimeStandard 格式化标准时间字符串
+func FormatFromTimeStandard(t string) string {
 	if len(t) < 19 {
 		return t
 	}
@@ -386,6 +388,19 @@ func SliceIntToString(sliceInt []int) []string {
 		sliceString = append(sliceString, strconv.Itoa(i))
 	}
 	return sliceString
+}
+
+// SliceStringToInt 字符串切片转数字切片
+func SliceStringToInt(sliceString []string) []int {
+	if len(sliceString) == 0 {
+		return nil
+	}
+	var sliceInt []int
+	for _, s := range sliceString {
+		i, _ := strconv.Atoi(s)
+		sliceInt = append(sliceInt, i)
+	}
+	return sliceInt
 }
 
 // SliceIsSubset 判断是否是子集
@@ -754,6 +769,79 @@ func StructToMap(in interface{}, tagName string) (map[string]interface{}, error)
 	return out, nil
 }
 
+const SerializeGzipHeaderLen = 20
+
+// Serialize 序列化
+func Serialize(encode func(encoder *gob.Encoder) error, isCompress bool) ([]byte, error) {
+	bsBuf := config.BufPool.Get().(*bytes.Buffer)
+	defer func() {
+		bsBuf.Reset()
+		config.BufPool.Put(bsBuf)
+	}()
+
+	// gob方式序列化
+	encoder := gob.NewEncoder(bsBuf)
+	err := encode(encoder)
+	if err != nil {
+		return nil, err
+	}
+	binaryData := bsBuf.Bytes()
+	if isCompress {
+		bsBuf.Reset()
+
+		// 增加头部，处理gzip文件头问题
+		for i := 0; i < SerializeGzipHeaderLen; i++ {
+			binaryData = append(binaryData, 0)
+		}
+		copy(binaryData[SerializeGzipHeaderLen:], binaryData)
+		for i := 0; i < SerializeGzipHeaderLen; i++ {
+			binaryData[i] = byte(i)
+		}
+
+		// gzip压缩
+		w := gzip.NewWriter(bsBuf)
+		if _, err = w.Write(binaryData); err != nil {
+			return nil, err
+		}
+		w.Flush()
+		w.Close()
+		binaryData = bsBuf.Bytes()
+	}
+
+	return binaryData, nil
+}
+
+// UnSerialize 反序列化
+func UnSerialize(binaryData []byte, decode func(decoder *gob.Decoder) error, isCompress bool) error {
+	bsBuf := config.BufPool.Get().(*bytes.Buffer)
+	defer func() {
+		bsBuf.Reset()
+		config.BufPool.Put(bsBuf)
+	}()
+
+	if isCompress {
+		// gzip解压缩
+		bsBuf.Write(binaryData)
+		r, err := gzip.NewReader(bsBuf)
+		if err != nil {
+			return err
+		}
+		binaryData, err = io.ReadAll(r)
+		if err != nil {
+			return err
+		}
+
+		// 删除头部，处理gzip文件头问题
+		binaryData = binaryData[SerializeGzipHeaderLen:]
+		bsBuf.Reset()
+	}
+
+	// gob方式反序列化
+	bsBuf.Write(binaryData)
+	decoder := gob.NewDecoder(bsBuf)
+	return decode(decoder)
+}
+
 // JsonEncode json编码，不转义字符
 func JsonEncode(v interface{}) []byte {
 	bsBuf := config.BufPool.Get().(*bytes.Buffer)
@@ -769,4 +857,9 @@ func JsonEncode(v interface{}) []byte {
 	dst := make([]byte, len(src))
 	copy(dst, src)
 	return dst
+}
+
+// FormatToTimeStandard 转换成标准时间格式
+func FormatToTimeStandard(datetime string) string {
+	return strings.Replace(datetime, " ", "T", 1) + "+08:00"
 }
