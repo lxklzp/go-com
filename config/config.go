@@ -78,6 +78,7 @@ type Postgresql struct {
 	User     string
 	Password string
 	Dbname   string
+	Schema   string
 	DbConfig DbConfig
 }
 

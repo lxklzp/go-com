@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -32,6 +33,8 @@ func Run() {
 	gin.DefaultWriter = logr.L.Out      // 设定日志
 	gin.DefaultErrorWriter = logr.L.Out // 设定日志
 	r := gin.New()
+
+	pprof.Register(r) // pprof
 
 	r.MaxMultipartMemory = config.C.App.MaxMultipartMemory // 设置最大上传文件
 

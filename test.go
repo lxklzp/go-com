@@ -2,19 +2,13 @@ package main
 
 import (
 	"fmt"
-	"go-com/config"
-	"go-com/core/logr"
+	"go-com/core/tool"
 )
 
 func main() {
-	config.Load()
-	logr.InitLog("test")
 
-	fmt.Println(network.IPv4CheckWhitelist("195.168.3.1111", []string{
-		"193.*.*.*",
-		"192.*.*.*",
-		"*.*",
-		"195.168.3.64",
-		"kk",
-	}))
+	a := []int{10, 30, 20, 40}
+	b := []int{20, 40, 1, 10, 30, 10}
+
+	fmt.Println(tool.SliceEqualUnordered(a, b))
 }

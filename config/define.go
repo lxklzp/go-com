@@ -74,7 +74,7 @@ func InitDefine() {
 type Timestamp time.Time
 
 func (t *Timestamp) UnmarshalJSON(data []byte) error {
-	if string(data) == "null" {
+	if string(data) == "null" || string(data) == `""` {
 		return nil
 	}
 	var err error

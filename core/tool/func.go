@@ -2,6 +2,7 @@ package tool
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
@@ -61,6 +62,10 @@ func InterfaceToString(v interface{}) string {
 		return string(v.([]byte))
 	case int:
 		return strconv.Itoa(v.(int))
+	case bool:
+		return strconv.FormatBool(v.(bool))
+	case float32:
+		return strconv.FormatFloat(v.(float64), 'f', -1, 32)
 	case int8:
 		return strconv.Itoa(int(v.(int8)))
 	case int16:
@@ -397,6 +402,40 @@ func SliceIsSubset[T int | string](sub []T, super []T) bool {
 	return true
 }
 
+// SliceEqualUnordered 判断两个切片是否包含完全相同元素（不考虑顺序）
+func SliceEqualUnordered[T int | string](a []T, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	// 将a切片值录入计数map
+	valueCount := make(map[T]int, len(a))
+	for _, v := range a {
+		valueCount[v]++
+	}
+
+	// 比对b切片值计数
+	for _, v := range b {
+		// a中没有b中的元素
+		if valueCount[v] == 0 {
+			return false
+		}
+		// a中有b中的元素，兑掉一次
+		valueCount[v]--
+		// a中兑完则删除
+		if valueCount[v] == 0 {
+			delete(valueCount, v)
+		}
+	}
+
+	// b中没有a中的元素
+	if len(valueCount) != 0 {
+		return false
+	}
+
+	return true
+}
+
 // MapIntersect 求map[T]bool的交集
 func MapIntersect[T int | string](a map[T]bool, b map[T]bool) map[T]bool {
 	res := make(map[T]bool)
@@ -713,4 +752,21 @@ func StructToMap(in interface{}, tagName string) (map[string]interface{}, error)
 		}
 	}
 	return out, nil
+}
+
+// JsonEncode json编码，不转义字符
+func JsonEncode(v interface{}) []byte {
+	bsBuf := config.BufPool.Get().(*bytes.Buffer)
+	defer func() {
+		bsBuf.Reset()
+		config.BufPool.Put(bsBuf)
+	}()
+	encoder := json.NewEncoder(bsBuf)
+	encoder.SetEscapeHTML(false)
+	encoder.Encode(v)
+
+	src := bsBuf.Bytes()
+	dst := make([]byte, len(src))
+	copy(dst, src)
+	return dst
 }
