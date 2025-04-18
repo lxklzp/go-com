@@ -88,3 +88,18 @@ func IPv4CheckWhitelist(ip string, rules []string) bool {
 	}
 	return false
 }
+
+func ParseAddr(addr string) (string, int, error) {
+	addrPart := strings.Split(addr, ":")
+	addrPartLen := len(addrPart)
+	if addrPartLen < 2 {
+		return "", 0, errors.New("addr有误。")
+	}
+	host := strings.Join(addrPart[0:addrPartLen-1], ":")
+	port := addrPart[addrPartLen-1]
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		return "", 0, errors.New("addr的端口有误。")
+	}
+	return host, portNum, nil
+}
