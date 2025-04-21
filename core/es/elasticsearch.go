@@ -8,6 +8,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/pkg/errors"
+	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
 	"net/http"
@@ -15,6 +16,12 @@ import (
 	"sync"
 	"time"
 )
+
+var ReqBufPool *sync.Pool
+
+type Config struct {
+	config.Es
+}
 
 func init() {
 	ReqBufPool = &sync.Pool{
@@ -38,6 +45,25 @@ func NewEs(cfg Config) *elasticsearch.Client {
 		logr.L.Fatal(err)
 	}
 	return es
+}
+
+type Base struct {
+	ScrollId     string `json:"_scroll_id"`
+	Hits         Hits   `json:"hits"`
+	Aggregations map[string]map[string]interface{}
+	Count        int `json:"count"`
+}
+
+type Hits struct {
+	Total HitsTotal                `json:"total"`
+	Hits  []map[string]interface{} `json:"hits"`
+}
+
+type HitsTotal struct {
+	Value int `json:"value"`
+}
+
+type Aggregations struct {
 }
 
 /*
@@ -95,8 +121,8 @@ func SearchPagination(es *elasticsearch.Client, index string, sql string, handle
 
 	// 首次查询 search
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*30)
+	defer ctxCancel()
 	respSearch, err := es.Search(es.Search.WithIndex(index), es.Search.WithScroll(time.Minute*3), es.Search.WithBody(buffer), es.Search.WithPretty(), es.Search.WithContext(ctx))
-	ctxCancel()
 	var base Base
 	if err != nil {
 		logr.L.Error(err)
@@ -109,29 +135,40 @@ func SearchPagination(es *elasticsearch.Client, index string, sql string, handle
 	handle(base.Hits.Hits)
 
 	// 分页查询 scroll
-	var respClient *esapi.Response
 	for len(base.Hits.Hits) != 0 {
-		ctx, ctxCancel = context.WithTimeout(context.TODO(), time.Second*30)
-		respClient, err = es.Scroll(es.Scroll.WithScrollID(base.ScrollId), es.Scroll.WithScroll(time.Minute*3), es.Scroll.WithContext(ctx))
-		ctxCancel()
-		if err != nil {
+		if err = SearchByScroll(es, base.ScrollId, handle); err != nil {
 			logr.L.Error(err)
 			continue
 		}
-		base = Base{}
-		json.NewDecoder(respClient.Body).Decode(&base)
-		respClient.Body.Close()
-		handle(base.Hits.Hits)
 	}
 
 	// 关闭 scroll
-	ctx, ctxCancel = context.WithTimeout(context.TODO(), time.Second*5)
-	respClient, err = es.ClearScroll(es.ClearScroll.WithScrollID(base.ScrollId), es.ClearScroll.WithContext(ctx))
-	ctxCancel()
+	ctxClear, ctxCancelClear := context.WithTimeout(context.TODO(), time.Second*5)
+	defer ctxCancelClear()
+	_, err = es.ClearScroll(es.ClearScroll.WithScrollID(base.ScrollId), es.ClearScroll.WithContext(ctxClear))
 	if err != nil {
 		logr.L.Error(err)
 	}
 	return total
+}
+
+// SearchByScroll 按scroll查询
+func SearchByScroll(es *elasticsearch.Client, scrollId string, handle func(data []map[string]interface{})) error {
+	var err error
+	var respClient *esapi.Response
+
+	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*30)
+	defer ctxCancel()
+	respClient, err = es.Scroll(es.Scroll.WithScrollID(scrollId), es.Scroll.WithScroll(time.Minute*3), es.Scroll.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+	base := Base{}
+	json.NewDecoder(respClient.Body).Decode(&base)
+	respClient.Body.Close()
+	handle(base.Hits.Hits)
+
+	return nil
 }
 
 /*
@@ -225,15 +262,14 @@ func Search(es *elasticsearch.Client, index string, sql string) (int, []map[stri
 	buffer.WriteString(sql)
 
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*30)
+	defer ctxCancel()
 	respSearch, err := es.Search(es.Search.WithIndex(index), es.Search.WithBody(buffer), es.Search.WithPretty(), es.Search.WithContext(ctx))
-	ctxCancel()
 	var base Base
 	if err != nil {
 		logr.L.Error(err)
 		return 0, nil, nil
 	}
 	json.NewDecoder(respSearch.Body).Decode(&base)
-	respSearch.Body.Close()
 	logr.L.Debug(base.Hits.Total.Value)
 	return base.Hits.Total.Value, base.Hits.Hits, base.Aggregations
 }
@@ -276,8 +312,8 @@ func Count(es *elasticsearch.Client, index string, sql string) int {
 	}()
 	buffer.WriteString(sql)
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*5)
+	defer ctxCancel()
 	respClient, err := es.Count(es.Count.WithIndex(index), es.Count.WithBody(buffer), es.Count.WithContext(ctx))
-	ctxCancel()
 	if err != nil {
 		logr.L.Error(err)
 		return 0
@@ -304,22 +340,22 @@ CreateIndex 创建索引
 */
 func CreateIndex(es *elasticsearch.Client, index string, body string) error {
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*5)
+	defer ctxCancel()
 	_, err := es.Indices.Create(index, es.Indices.Create.WithBody(strings.NewReader(body)), es.Indices.Create.WithContext(ctx))
-	ctxCancel()
 	return err
 }
 
 func DeleteIndex(es *elasticsearch.Client, index string) error {
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*5)
+	defer ctxCancel()
 	_, err := es.Indices.Delete([]string{index}, es.Indices.Delete.WithContext(ctx))
-	ctxCancel()
 	return err
 }
 
 func ExistsIndex(es *elasticsearch.Client, index string) (bool, error) {
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*5)
+	defer ctxCancel()
 	respClient, err := es.Indices.Exists([]string{index}, es.Indices.Exists.WithContext(ctx))
-	ctxCancel()
 	if err != nil {
 		return false, err
 	}
@@ -418,8 +454,8 @@ func insert(es *elasticsearch.Client, index string, dataJson []byte) {
 
 func Delete(es *elasticsearch.Client, index string, sql string) error {
 	ctx, ctxCancel := context.WithTimeout(context.TODO(), time.Second*10)
+	defer ctxCancel()
 	res, err := es.DeleteByQuery([]string{index}, bytes.NewReader([]byte(sql)), es.DeleteByQuery.WithContext(ctx))
-	ctxCancel()
 	if err != nil {
 		return err
 	}
