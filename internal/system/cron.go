@@ -5,24 +5,23 @@ import (
 	"github.com/sirupsen/logrus"
 	"go-com/config"
 	"go-com/core/logr"
+	"go-com/core/mod"
 	"go-com/core/tool"
 	"go-com/internal/app"
-	"io/fs"
-	"os"
-	"path/filepath"
-	"strings"
+	"go-com/internal/model"
+	"sync/atomic"
 	"time"
 )
 
 func CronRun() {
 	l := &cronLog{}
-	app.Cron = cron.New(cron.WithLogger(cron.DiscardLogger), cron.WithChain(cron.SkipIfStillRunning(l), cron.Recover(l)))
+	app.Cron = cron.New(cron.WithLogger(cron.DiscardLogger), cron.WithChain(cron.Recover(l)))
 
 	var err error
-	// 清除过期数据
+	// 清除过期的数据
 	_, err = app.Cron.AddFunc("0 1 * * *", func() {
 		logr.L.Debug("开始清除过期数据...")
-		ClearDaily()
+		CronClearHistory()
 		logr.L.Debug("完成清除过期数据")
 	})
 	if err != nil {
@@ -46,38 +45,30 @@ func (l *cronLog) Error(err error, msg string, keysAndValues ...interface{}) {
 	tool.ErrorStack(err)
 }
 
-func ClearDaily() {
-	var err error
-	now := time.Now()
+// 按表清除过期的数据
+func clearTable(table string, primaryKey string, createTimeName string, limitTime string, pageSize int) {
+	var m mod.PrimaryId
+	app.Db.Table(table).Select(primaryKey).Where(createTimeName+"<?", limitTime).Take(&m)
+	for m.ID > 0 {
+		app.Db.Table(table).Where(createTimeName+"<?", limitTime).Limit(pageSize).Delete(nil)
+		m = mod.PrimaryId{}
+		app.Db.Table(table).Select(primaryKey).Where(createTimeName+"<?", limitTime).Take(&m)
+	}
+}
 
-	/* 导出的excel文件 */
-	var dir string
-	prevDay := 5
-	// 删除上月数据
-	if now.Day() == prevDay {
-		dir = config.C.App.PublicPath + "/export/" + now.AddDate(0, -1, 0).Format(config.MonthNumberFormatter)
-		os.RemoveAll(dir)
+var CronClearHistoryLock atomic.Int64
+
+// CronClearHistory 清除过期的数据
+func CronClearHistory() {
+	// 同时只能有一个方法运行
+	if !CronClearHistoryLock.CompareAndSwap(0, 1) {
+		return
 	}
-	// 删除5天前数据
-	dir = config.C.App.PublicPath + "/export/" + now.Format(config.MonthNumberFormatter)
-	dateNumber := now.AddDate(0, 0, -prevDay).Format(config.DateNumberFormatter)
-	err = filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		// 跳过目录自身
-		if path == dir {
-			return nil
-		}
-		filename := info.Name()
-		if info.IsDir() {
-			return nil
-		} else if strings.Contains(filename, dateNumber) {
-			return os.Remove(dir + "/" + filename)
-		}
-		return err
-	})
-	if err != nil {
-		logr.L.Error(err)
-	}
+	defer CronClearHistoryLock.Store(0)
+
+	limitT := time.Now().AddDate(0, 0, -7)
+	limitTime := limitT.Format(config.DateTimeFormatter)
+	pageSize := 10000
+
+	clearTable((&model.Download{}).TableName(), "id", "create_time", limitTime, pageSize)
 }

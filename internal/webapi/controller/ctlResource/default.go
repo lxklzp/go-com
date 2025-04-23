@@ -1,0 +1,3 @@
+package ctlResource
+
+func InitController() {}

@@ -3,6 +3,7 @@ package network
 import (
 	"github.com/pkg/errors"
 	"go-com/core/logr"
+	"math"
 	"net"
 	"strconv"
 	"strings"
@@ -89,6 +90,7 @@ func IPv4CheckWhitelist(ip string, rules []string) bool {
 	return false
 }
 
+// ParseAddr 解析ip地址
 func ParseAddr(addr string) (string, int, error) {
 	addrPart := strings.Split(addr, ":")
 	addrPartLen := len(addrPart)
@@ -102,4 +104,29 @@ func ParseAddr(addr string) (string, int, error) {
 		return "", 0, errors.New("addr的端口有误。")
 	}
 	return host, portNum, nil
+}
+
+// IPString2Long 把ip字符串转为数值
+func IPString2Long(ip string) (uint, error) {
+	b := net.ParseIP(ip).To4()
+	if b == nil {
+		return 0, errors.New("invalid ipv4 format")
+	}
+
+	return uint(b[3]) | uint(b[2])<<8 | uint(b[1])<<16 | uint(b[0])<<24, nil
+}
+
+// Long2IPString 把数值转为ip字符串
+func Long2IPString(i uint) (string, error) {
+	if i > math.MaxUint32 {
+		return "", errors.New("beyond the scope of ipv4")
+	}
+
+	ip := make(net.IP, net.IPv4len)
+	ip[0] = byte(i >> 24)
+	ip[1] = byte(i >> 16)
+	ip[2] = byte(i >> 8)
+	ip[3] = byte(i)
+
+	return ip.String(), nil
 }

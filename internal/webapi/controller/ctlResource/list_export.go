@@ -1,4 +1,4 @@
-package controller
+package ctlResource
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"go-com/core/tool"
 	"go-com/internal/app"
 	"go-com/internal/model"
-	"go-com/internal/system"
+	"go-com/internal/system/resource"
 	"gorm.io/gorm"
 	"strconv"
 	"time"
@@ -20,7 +20,7 @@ import (
 type listExport struct{}
 
 func init() {
-	config.AddRouterApi(listExport{}, &config.RouterApiList)
+	config.AddRouterApi(listExport{}, &config.RouterWebApiList)
 }
 
 type DigitalLifeIndexReqData struct {
@@ -32,7 +32,7 @@ type DigitalLifeIndexReqData struct {
 }
 
 func (ctl listExport) queryDigitalLifeIndexList(param DigitalLifeIndexReqData) *gorm.DB {
-	query := app.Pg.Model(model.DigitalLifeIndex{})
+	query := app.Db.Model(model.DigitalLifeIndex{})
 	if param.ProductID != 0 {
 		query.Where("product_id=?", param.ProductID)
 	}
@@ -43,14 +43,13 @@ func (ctl listExport) formatDigitalLifeIndexList(mList []model.DigitalLifeIndex)
 	indexMap := model.CodeMap("digital_life_index")
 	productMap := make(map[string]string)
 	var mCode []model.Code
-	app.Pg.Select("p_key,content").Where("type='digital_life_index'").Group("p_key,content").Find(&mCode)
+	app.Db.Select("p_key,content").Where("type='digital_life_index'").Group("p_key,content").Find(&mCode)
 	for _, item := range mCode {
 		productMap[item.PKey] = item.Content
 	}
 	for k := range mList {
 		mList[k].IndicatorName = indexMap[strconv.Itoa(mList[k].IndicatorID)]
 		mList[k].ProductName = productMap[strconv.Itoa(mList[k].ProductID)]
-		mList[k].TimeName = system.ShiLian.DigitalLifeIndexTimeType[mList[k].TimeType]
 	}
 }
 
@@ -59,7 +58,7 @@ func (ctl listExport) ActionDigitalLifeIndexList(c *gin.Context) interface{} {
 	var err error
 	var param DigitalLifeIndexReqData
 	if err = c.ShouldBindJSON(&param); err != nil {
-		return tool.RespData(400, tool.ErrorStr(err), nil)
+		return tool.RespData(400, err.Error(), nil)
 	}
 	param.Base.Validate()
 
@@ -81,7 +80,7 @@ func (ctl listExport) ActionDigitalLifeIndexList(c *gin.Context) interface{} {
 	productMap := make(map[string]string)
 	var mCode []model.Code
 	mCodeWhere := fmt.Sprintf(`type='digital_life_index' and comment='%s'`, param.Type)
-	app.Pg.Select("p_key,content").Where(mCodeWhere).Group("p_key,content").Find(&mCode)
+	app.Db.Select("p_key,content").Where(mCodeWhere).Group("p_key,content").Find(&mCode)
 	for _, item := range mCode {
 		productMap[item.PKey] = item.Content
 	}
@@ -98,11 +97,11 @@ func (ctl listExport) ActionDigitalLifeIndexListExport(c *gin.Context) interface
 	var err error
 	var param DigitalLifeIndexReqData
 	if err = c.ShouldBindJSON(&param); err != nil {
-		return tool.RespData(400, tool.ErrorStr(err), nil)
+		return tool.RespData(400, err.Error(), nil)
 	}
 
 	var mDownloadId int
-	if mDownloadId, err = system.DownloadBefore(param.ExportTitle, 0); err != nil {
+	if mDownloadId, err = resource.Download.Before(param.ExportTitle, 0); err != nil {
 		return tool.RespData(400, err.Error(), nil)
 	}
 
@@ -137,7 +136,7 @@ func (ctl listExport) ActionDigitalLifeIndexListExport(c *gin.Context) interface
 				}
 			}, nil)
 
-		system.DownloadAfter(mDownloadId, path, err)
+		resource.Download.After(mDownloadId, path, err)
 	}()
 
 	return tool.RespData(200, "", map[string]interface{}{

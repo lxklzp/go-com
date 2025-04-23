@@ -1,11 +1,13 @@
 package giner
 
 import (
+	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"go-com/config"
 	"go-com/core/tool"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 )
@@ -57,9 +59,17 @@ func UploadFileRead(c *gin.Context) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	dataJson, err := io.ReadAll(file)
+	dataBytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
-	return dataJson, err
+	return dataBytes, err
+}
+
+// ExportFile 导出文件，contentType示例："application/json;charset=utf-8"
+func ExportFile(c *gin.Context, data []byte, contentType string, filename string) {
+	filename = base64.StdEncoding.EncodeToString([]byte(filename))
+	c.Writer.Header().Set("Cache-Control", "max-age=0")
+	c.Writer.Header().Set("Content-Disposition", "attachment;filename="+filename)
+	c.Data(http.StatusOK, contentType, data)
 }

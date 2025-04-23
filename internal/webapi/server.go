@@ -1,4 +1,4 @@
-package api
+package webapi
 
 import (
 	"bytes"
@@ -22,7 +22,6 @@ var reqBufPool *sync.Pool
 var ServApi *http.Server
 
 func Run() {
-	// 中间件读取body的缓存
 	reqBufPool = &sync.Pool{
 		New: func() interface{} {
 			return bytes.NewBuffer(make([]byte, 0, 4096))
@@ -34,15 +33,19 @@ func Run() {
 	gin.DefaultErrorWriter = logr.L.Out // 设定日志
 	r := gin.New()
 
-	pprof.RouteRegister(r, config.AppApiPrefix+"pprof") // pprof
+	pprof.RouteRegister(r, config.WebApiPrefix+"pprof") // pprof
+
+	r.MaxMultipartMemory = config.C.App.MaxMultipartMemory // 设置最大上传文件
 
 	r.Use(midGate, midRecovery) // 中间件
+
+	r.Static(config.WebApiPrefix+"public", config.C.App.PublicPath)
 
 	bind(r) // 绑定接口
 
 	// 启动
 	ServApi = &http.Server{
-		Addr:    config.C.App.AppAddr,
+		Addr:    config.C.App.WebAddr,
 		Handler: r,
 	}
 	if err := ServApi.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -98,5 +101,13 @@ func midGate(c *gin.Context) {
 		logr.L.Infof("[request] %s\n%s %s %s %s %s\n--HEADER--\n%s--BODY--\n%s", c.Request.URL, c.Request.Method, c.Request.Proto, c.Request.Host, c.ClientIP(), c.RemoteIP(), header, body)
 	}
 
+	if config.C.App.GatewayToken != "" {
+		// 验证请求是否来自网关
+		if len(c.Request.Header["Gateway-Token"]) > 0 && c.Request.Header["Gateway-Token"][0] == config.C.App.GatewayToken {
+			c.Next()
+		} else {
+			c.AbortWithStatusJSON(http.StatusForbidden, tool.RespData(403, "非法访问。", nil))
+		}
+	}
 	c.Next()
 }

@@ -32,11 +32,11 @@ type Base struct {
 }
 
 type PrimaryId struct {
-	ID int64 `gorm:"column:id" json:"id"`
+	ID int `gorm:"column:id" json:"id"`
 }
 
 type PrimaryIdName struct {
-	ID   int64  `gorm:"column:id" json:"id"`
+	ID   int    `gorm:"column:id" json:"id"`
 	Name string `gorm:"column:name" json:"name"`
 }
 

@@ -73,6 +73,8 @@ func (ctl nifi) ProxyApi(c *gin.Context) {
 	proxy.ServeHTTP(c.Writer, c.Request)
 }
 
+var nifiResponseRewrite map[string]string
+
 // 读取代理的nifi响应数据
 func (ctl nifi) readProxyRespBody(resp *http.Response) []byte {
 	// 生成缓存
@@ -84,28 +86,47 @@ func (ctl nifi) readProxyRespBody(resp *http.Response) []byte {
 	resp.Body = io.NopCloser(buffer)
 
 	// 解压
-	r, err := gzip.NewReader(buffer)
-	if err != nil {
-		logr.L.Error(err)
-		return nil
-	}
-	result, err := io.ReadAll(r)
-	if err != nil {
-		logr.L.Error(err)
-		return nil
-	}
+	var result []byte
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		r, err := gzip.NewReader(buffer)
+		if err != nil {
+			logr.L.Error(err)
+			return nil
+		}
+		result, err = io.ReadAll(r)
+		if err != nil {
+			logr.L.Error(err)
+			return nil
+		}
 
-	// 替换NiFi字符
-	result = []byte(strings.Replace(string(result), "NiFi", "", -1))
-	// 压缩
-	w := gzip.NewWriter(buffer)
-	if _, err = w.Write(result); err != nil {
-		logr.L.Error(err)
-		return nil
+		// 替换字符
+		resultStr := string(result)
+		for src, dst := range nifiResponseRewrite {
+			resultStr = strings.Replace(resultStr, src, dst, -1)
+		}
+		result = []byte(resultStr)
+		// 压缩
+		w := gzip.NewWriter(buffer)
+		if _, err = w.Write(result); err != nil {
+			logr.L.Error(err)
+			return nil
+		}
+		w.Flush()
+		w.Close()
+		resp.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
+	} else {
+		result = buffer.Bytes()
+
+		// 替换字符
+		resultStr := string(result)
+		for src, dst := range nifiResponseRewrite {
+			resultStr = strings.Replace(resultStr, src, dst, -1)
+		}
+		result = []byte(resultStr)
+		buffer.Reset()
+		buffer.Write(result)
+		resp.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
 	}
-	w.Flush()
-	w.Close()
-	resp.Header.Set("Content-Length", strconv.Itoa(buffer.Len()))
 
 	return result
 }

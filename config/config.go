@@ -5,15 +5,13 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
-	"path/filepath"
+	"strconv"
 	"time"
 )
 
 var Root string // 根目录
 
 var RuntimePath string // 运行时的缓存文件目录
-
-var ConfigPath string // 配置文件目录
 
 var C config // 配置项
 
@@ -29,18 +27,19 @@ func init() {
 
 type config struct {
 	App         app
-	Postgresql  Postgresql
-	Clickhouse  Clickhouse
+	Mysql       Mysql
+	Pg          Postgresql
+	Redis       Redis
 	KafkaP      Kafka
 	KafkaC      Kafka
-	Mysql       Mysql
-	Redis       Redis
+	Es          Es
 	Etcd        Etcd
+	Oracle      Oracle
+	Clickhouse  Clickhouse
 	Nebula      Nebula
 	RateLimit   RateLimit
 	RateBreaker RateBreaker
 	Dq          Dq
-	Es          Es
 	Ftp         Ftp
 }
 
@@ -53,16 +52,19 @@ type app struct {
 	RuntimePath   string
 	LogExpire     int
 
-	PublicIp   string
-	ApiAddr    string
-	WebApiAddr string
+	AppAddr  string
+	WebAddr  string
+	GrpcAddr string
 
-	GatewayToken       string
-	GatewayAddr        string
+	GatewayToken        string `json:"-"`
+	ManageToken         string `json:"-"`
+	ServiceSupportToken string `json:"-"`
+	GrpcToken           string `json:"-"`
+
+	DbType int
+
 	PublicPath         string
 	MaxMultipartMemory int64
-	GrpcAddr           string
-	GrpcToken          string
 }
 
 type DbConfig struct {
@@ -70,6 +72,14 @@ type DbConfig struct {
 	MaxOpenConns    int    // 设置最大连接数
 	MaxIdleConns    int    // 设置最大空闲连接数
 	ConnMaxLifetime int    // 设置一个连接的最大存活时长，单位：秒
+}
+
+type Mysql struct {
+	Addr     string
+	User     string
+	Password string
+	Dbname   string
+	DbConfig DbConfig
 }
 
 type Postgresql struct {
@@ -82,12 +92,10 @@ type Postgresql struct {
 	DbConfig DbConfig
 }
 
-type Clickhouse struct {
+type Redis struct {
 	Addr     string
-	User     string
 	Password string
-	Dbname   string
-	DbConfig DbConfig
+	Db       int
 }
 
 type Kafka struct {
@@ -103,12 +111,21 @@ type Kafka struct {
 	MaxConsumeWorkerNum int
 }
 
-type Mysql struct {
-	Addr     string
+type Es struct {
+	Addr     []string
 	User     string
 	Password string
-	Dbname   string
+	Prefix   string
 	DbConfig DbConfig
+}
+
+type Etcd struct {
+	Addr          []string
+	User          string
+	Password      string
+	CertFile      string
+	KeyFile       string
+	TrustedCAFile string
 }
 
 type Oracle struct {
@@ -120,19 +137,12 @@ type Oracle struct {
 	DbConfig DbConfig
 }
 
-type Redis struct {
+type Clickhouse struct {
 	Addr     string
+	User     string
 	Password string
-	Db       int
-}
-
-type Etcd struct {
-	Addr          []string
-	User          string
-	Password      string
-	CertFile      string
-	KeyFile       string
-	TrustedCAFile string
+	Dbname   string
+	DbConfig DbConfig
 }
 
 type Nebula struct {
@@ -166,14 +176,6 @@ type Dq struct {
 	CheckNoRunningExist bool
 }
 
-type Es struct {
-	Addr     []string
-	User     string
-	Password string
-	Prefix   string
-	DbConfig DbConfig
-}
-
 type Ftp struct {
 	Addr     string
 	User     string
@@ -190,6 +192,8 @@ func decode() {
 	if C.App.PublicPath == "" {
 		C.App.PublicPath = Root + "runtime/public"
 	}
+
+	C.App.MaxMultipartMemory *= MB
 }
 
 // Load 加载配置文件
@@ -198,18 +202,16 @@ func Load() {
 	var id int64
 	var configFile string
 	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径") // -config=/data/go-com/config/config.yaml
-	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大1023")
+	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大99")
 	flag.Parse()
 
 	v := viper.New()
+	configPath := Root + "config"
 	if configFile == "" {
-		ConfigPath = Root + "config"
-		configFile = ConfigPath + "/config.yaml"
-	} else {
-		ConfigPath = filepath.Dir(configFile)
+		configFile = configPath + "/config.yaml"
 	}
 	v.SetConfigFile(configFile)
-	viper.AddConfigPath(ConfigPath)
+	viper.AddConfigPath(configPath)
 	if err := v.ReadInConfig(); err != nil {
 		log.Fatal(err)
 	}
@@ -223,8 +225,17 @@ func Load() {
 		C.App.Id = id
 	}
 
+	// 从环境变量获取
+	idEnv := os.Getenv("GO_COM_ID")
+	if idEnv != "" {
+		id, _ := strconv.Atoi(idEnv)
+		if id > 0 {
+			C.App.Id = int64(id)
+		}
+	}
+
 	// 验证id
-	if C.App.Id > 1023 || C.App.Id < 1 {
-		log.Fatal("id值在1和1023之间")
+	if C.App.Id > 99 || C.App.Id < 1 {
+		log.Fatal("唯一编号值在1和99之间。")
 	}
 }

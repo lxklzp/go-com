@@ -205,6 +205,7 @@ func (kafka *Kafka) InitAdmin(cfg Config) error {
 
 	kafka.Admin, err = queue.NewAdminClient(&cfgMap)
 	if err != nil {
+		logr.L.Error(err)
 		return err
 	}
 	return nil
@@ -248,6 +249,7 @@ func (kafka *Kafka) AdminBacklog(partitionCount int) (map[int]Offset, error) {
 	// 获取消息偏移量
 	resMsg, err := kafka.Admin.ListOffsets(ctx, topicPartitionOffsets, queue.SetAdminIsolationLevel(queue.IsolationLevelReadCommitted))
 	if err != nil {
+		logr.L.Error(err)
 		return nil, err
 	}
 
@@ -260,6 +262,7 @@ func (kafka *Kafka) AdminBacklog(partitionCount int) (map[int]Offset, error) {
 	}
 	resGroup, err := kafka.Admin.ListConsumerGroupOffsets(ctx, gps, queue.SetAdminRequireStableOffsets(true))
 	if err != nil {
+		logr.L.Error(err)
 		return nil, err
 	}
 	if len(resGroup.ConsumerGroupsTopicPartitions) == 0 {

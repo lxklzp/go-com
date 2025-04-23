@@ -14,54 +14,29 @@ App:
   # 日志有效期，单位天
   LogExpire: 10
 
-  # 公网IP（用于外网机器人访问）
-  PublicIp: 192.168.2.70
-  # api 地址
-  ApiAddr: 0.0.0.0:9701
-  # web_api 地址
-  WebApiAddr: 0.0.0.0:9702
-
-  # 网关token
-  GatewayToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
-  # 网关地址
-  GatewayAddr: http://192.168.2.70:9080
-  # 开放目录 空表示：项目目录/runtime/public
-  PublicPath:
-  # 文件上传大小限制 单位Mb
-  MaxMultipartMemory: 1024
+  # app http服务
+  AppAddr: 0.0.0.0:9611
+  # web http服务
+  WebAddr: 0.0.0.0:9613
   # grpc访问地址
   GrpcAddr: 0.0.0.0:9703
+
+  # 网关token，为空则不验证
+  GatewayToken:
+  # 系统管理接口验证token
+  ManageToken: 6OgkBIbDvpHmK0LVWQAxnpp07Dsnu1bY
+  # 服务支持接口验证token
+  ServiceSupportToken: dDbLI9AHcxQE3xO8nuJjfYglJkC1Yolz
   # grpc鉴权token
   GrpcToken: K00hRvlnNw3DJNWWIeODwjwyBOafBn8u
 
-Postgresql:
-  Host: 192.168.2.70
-  Port: 5432
-  User: postgres
-  Password: mypass
-  Dbname: test
-  Schema:
-  MaxOpenConns: 200
-  MaxIdleConns: 10
+  # 关系型数据库类型 1 mysql 2 pgsql
+  DbType: 1
 
-Clickhouse:
-  Addr: 192.168.2.70:9000
-  User: itestor
-  Password: 36h2E5paQhQ6Bc8C
-  Dbname: test
-
-Kafka:
-  Servers: 192.168.2.22:9092
-  Username:
-  Password:
-  Topic: for-test
-  Group: test-group6
-  SecurityProtocol:
-  SaslMechanisms:
-  # kafka消息消费日志有效期，单位天，0表示不记录
-  LogExpire: 10
-  # kafka最大消费者数目
-  MaxConsumeWorkerNum: 10
+  # 开放目录 空表示：项目目录/runtime/public
+  PublicPath:
+  # 文件上传大小限制 单位Mb
+  MaxMultipartMemory: 100
 
 Mysql:
   Addr: 192.168.2.70:3306
@@ -74,26 +49,47 @@ Mysql:
     MaxOpenConns: 200
     MaxIdleConns: 10
 
+Pg:
+  Host: 192.168.2.70
+  Port: 5432
+  User: postgres
+  Password: mypass
+  Dbname: test
+  Schema:
+  DbConfig:
+    MaxOpenConns: 200
+    MaxIdleConns: 10
+
 Redis:
   Addr: 192.168.2.70:6379
   Password: mypass
-  Db: 0Update
+  Db: 0
 
-Etcd:
-  Addr:
-    - 192.168.2.70:12379
-  User: root
-  Password: mypass
-  CertFile:
-  KeyFile:
-  TrustedCAFile:
+KafkaP:
+  Servers: 192.168.2.22:9092
+  Username:
+  Password:
+  Topic:
+  Group:
+  SecurityProtocol:
+  SaslMechanisms:
+  # kafka消息消费日志有效期，单位天，0表示不记录
+  LogExpire: 0
+  # kafka最大消费者数目
+  MaxConsumeWorkerNum: 0
 
-Nebula:
-  Host: 192.168.2.71
-  Port: 9669
-  User: root
-  Password: 123456
-  Dbname: tyhd_net
+KafkaC:
+  Servers: 192.168.2.22:9092
+  Username:
+  Password:
+  Topic: for-test
+  Group: test-group6
+  SecurityProtocol:
+  SaslMechanisms:
+  # kafka消息消费日志有效期，单位天，0表示不记录
+  LogExpire: 10
+  # kafka最大消费者数目
+  MaxConsumeWorkerNum: 10
 
 Es:
   Addr:
@@ -104,6 +100,38 @@ Es:
   DbConfig:
     MaxOpenConns: 200
     MaxIdleConns: 10
+
+Etcd:
+  Addr:
+    - 192.168.2.70:12379
+  User: root
+  Password: mypass
+  CertFile:
+  KeyFile:
+  TrustedCAFile:
+
+Oracle:
+  Host: 192.168.2.70
+  Port: 1521
+  User: root
+  Password: mypass
+  Service: test
+  DbConfig:
+    MaxOpenConns: 200
+    MaxIdleConns: 10
+
+Clickhouse:
+  Addr: 192.168.2.70:9000
+  User: itestor
+  Password: 36h2E5paQhQ6Bc8C
+  Dbname: test
+
+Nebula:
+  Host: 192.168.2.71
+  Port: 9669
+  User: root
+  Password: 123456
+  Dbname: tyhd_net
 
 RateLimit:
   # 桶中每秒产生token个数

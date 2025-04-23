@@ -44,6 +44,50 @@ func Exist(filePath string) bool {
 	return true
 }
 
+// ReadLine 按行读取数据
+func ReadLine(filename string, handler func(line string) error) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	reader := bufio.NewReader(f)
+	var line string
+	for {
+		line, err = reader.ReadString('\n')
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+		err = handler(line)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// CopyFile 复制文件（如果目标文件存在，会覆盖）
+func CopyFile(dstName, srcName string) error {
+	src, err := os.Open(srcName)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.OpenFile(dstName, os.O_CREATE|os.O_WRONLY, 0777)
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Zip 压缩文件夹
 func Zip(srcDir string, dstDir string, zipFilename string) error {
 	if !Exist(dstDir) {
@@ -113,6 +157,7 @@ func Unzip(zipData []byte, destDir string) error {
 	return nil
 }
 
+// unzip解压辅助函数
 func writeUnzipFile(f *zip.File, destDir string) error {
 	fName := f.Name
 	destPath := filepath.Join(destDir, fName)
@@ -133,48 +178,4 @@ func writeUnzipFile(f *zip.File, destDir string) error {
 	defer fr.Close()
 	_, err = io.Copy(fw, fr)
 	return err
-}
-
-// ReadLine 按行读取数据
-func ReadLine(filename string, handler func(line string) error) error {
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	reader := bufio.NewReader(f)
-	var line string
-	for {
-		line, err = reader.ReadString('\n')
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return err
-		}
-		err = handler(line)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// CopyFile 复制文件（如果目标文件存在，会覆盖）
-func CopyFile(dstName, srcName string) error {
-	src, err := os.Open(srcName)
-	if err != nil {
-		return err
-	}
-	defer src.Close()
-
-	dst, err := os.OpenFile(dstName, os.O_CREATE|os.O_WRONLY, 0777)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
-
-	_, err = io.Copy(dst, src)
-	if err != nil {
-		return err
-	}
-	return nil
 }

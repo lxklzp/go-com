@@ -8,39 +8,42 @@ import (
 	"sync"
 )
 
-const (
-	// TopWeight is the top weight that one entry might set.
-	TopWeight = 100
+/********** 一致性哈希
+这是go-zero的组件：
+支持动态新增、删除节点
+支持虚拟节点、节点权重、哈希冲突处理
+**********/
 
-	minReplicas = 100
-	prime       = 16777619
+const (
+	TopWeight   = 100      // 节点可以设置的最大权重值
+	minReplicas = 100      // 每个节点的最小虚拟节点数
+	prime       = 16777619 // 用于二次哈希计算的质数
 )
 
+// 用于占位，节省内存空间
 var placeholder placeholderType
 
 type placeholderType = struct{}
 
 type (
-	// Func defines the hash method.
+	// Func 定义哈希函数类型
 	Func func(data []byte) uint64
 
-	// A ConsistentHash is a ring hash implementation.
+	// ConsistentHash 一致性哈希数据结构
 	ConsistentHash struct {
-		hashFunc Func
-		replicas int
-		keys     []uint64
-		ring     map[uint64][]any
-		nodes    map[string]placeholderType
-		lock     sync.RWMutex
+		hashFunc Func                       // 哈希函数
+		replicas int                        // 每个节点的默认虚拟节点数
+		keys     []uint64                   // 哈希环，排序后的虚拟节点哈希键列表
+		ring     map[uint64][]any           // 虚拟节点哈希键到真实节点的映射，[]any的作用是处理哈希冲突，即不同真实节点映射了相同的虚拟节点哈希键
+		nodes    map[string]placeholderType // 真实节点字符串集合
+		lock     sync.RWMutex               // 处理并发读写keys、ring、nodes的锁
 	}
 )
 
-// NewConsistentHash returns a ConsistentHash.
 func NewConsistentHash() *ConsistentHash {
 	return NewCustomConsistentHash(minReplicas, Hash)
 }
 
-// NewCustomConsistentHash returns a ConsistentHash with given replicas and hash func.
 func NewCustomConsistentHash(replicas int, fn Func) *ConsistentHash {
 	if replicas < minReplicas {
 		replicas = minReplicas
@@ -58,48 +61,46 @@ func NewCustomConsistentHash(replicas int, fn Func) *ConsistentHash {
 	}
 }
 
-// Add adds the node with the number of h.replicas,
-// the later call will overwrite the replicas of the former calls.
+// Add 使用默认虚拟节点数添加节点
 func (h *ConsistentHash) Add(node any) {
 	h.AddWithReplicas(node, h.replicas)
 }
 
-// AddWithReplicas adds the node with the number of replicas,
-// replicas will be truncated to h.replicas if it's larger than h.replicas,
-// the later call will overwrite the replicas of the former calls.
+// AddWithReplicas 使用指定虚拟节点数添加节点
 func (h *ConsistentHash) AddWithReplicas(node any, replicas int) {
+	// 先删除，再添加的方式
 	h.Remove(node)
 
+	// 指定虚拟节点数应当小于默认节点
 	if replicas > h.replicas {
 		replicas = h.replicas
 	}
 
-	nodeRepr := repr(node)
+	nodeRepr := repr(node) // 将节点转换成字符串
 	h.lock.Lock()
 	defer h.lock.Unlock()
-	h.addNode(nodeRepr)
+	h.addNode(nodeRepr) // 添加真实节点 将节点字符串添加到nodes
 
+	// 添加虚拟节点
 	for i := 0; i < replicas; i++ {
-		hash := h.hashFunc([]byte(nodeRepr + strconv.Itoa(i)))
-		h.keys = append(h.keys, hash)
-		h.ring[hash] = append(h.ring[hash], node)
+		hash := h.hashFunc([]byte(nodeRepr + strconv.Itoa(i))) // 使用节点字符串+序号生成虚拟节点哈希键
+		h.keys = append(h.keys, hash)                          // 将虚拟节点哈希键添加到keys
+		h.ring[hash] = append(h.ring[hash], node)              // 将虚拟节点哈希键到真实节点的映射添加到ring
 	}
 
+	// 哈希环排序，用于sort.Search
 	sort.Slice(h.keys, func(i, j int) bool {
 		return h.keys[i] < h.keys[j]
 	})
 }
 
-// AddWithWeight adds the node with weight, the weight can be 1 to 100, indicates the percent,
-// the later call will overwrite the replicas of the former calls.
+// AddWithWeight 根据权重添加节点（权重1-100）
 func (h *ConsistentHash) AddWithWeight(node any, weight int) {
-	// don't need to make sure weight not larger than TopWeight,
-	// because AddWithReplicas makes sure replicas cannot be larger than h.replicas
 	replicas := h.replicas * weight / TopWeight
 	h.AddWithReplicas(node, replicas)
 }
 
-// Get returns the corresponding node from h base on the given v.
+// Get 根据查找键对应的节点
 func (h *ConsistentHash) Get(v any) (any, bool) {
 	h.lock.RLock()
 	defer h.lock.RUnlock()
@@ -108,7 +109,8 @@ func (h *ConsistentHash) Get(v any) (any, bool) {
 		return nil, false
 	}
 
-	hash := h.hashFunc([]byte(repr(v)))
+	hash := h.hashFunc([]byte(repr(v))) // 根据查找键生成查找哈希键
+	// 从哈希环中取出匹配的虚拟节点哈希键索引
 	index := sort.Search(len(h.keys), func(i int) bool {
 		return h.keys[i] >= hash
 	}) % len(h.keys)
@@ -120,15 +122,16 @@ func (h *ConsistentHash) Get(v any) (any, bool) {
 	case 1:
 		return nodes[0], true
 	default:
+		// 当多个真实节点映射到同一个虚拟节点时，使用二次哈希
 		innerIndex := h.hashFunc([]byte(innerRepr(v)))
 		pos := int(innerIndex % uint64(len(nodes)))
 		return nodes[pos], true
 	}
 }
 
-// Remove removes the given node from h.
+// Remove 删除节点 真实节点及其所有虚拟节点
 func (h *ConsistentHash) Remove(node any) {
-	nodeRepr := repr(node)
+	nodeRepr := repr(node) // 将节点转换成字符串
 
 	h.lock.Lock()
 	defer h.lock.Unlock()
@@ -137,22 +140,27 @@ func (h *ConsistentHash) Remove(node any) {
 		return
 	}
 
+	// 删除虚拟节点
 	for i := 0; i < h.replicas; i++ {
-		hash := h.hashFunc([]byte(nodeRepr + strconv.Itoa(i)))
+		hash := h.hashFunc([]byte(nodeRepr + strconv.Itoa(i))) // 使用节点字符串+序号生成虚拟节点哈希键
+		// 从哈希环中取出匹配的虚拟节点哈希键索引
 		index := sort.Search(len(h.keys), func(i int) bool {
 			return h.keys[i] >= hash
 		})
+		// 从keys中删除
 		if index < len(h.keys) && h.keys[index] == hash {
 			h.keys = append(h.keys[:index], h.keys[index+1:]...)
 		}
-		h.removeRingNode(hash, nodeRepr)
+		h.removeRingNode(hash, nodeRepr) // 从ring中删除
 	}
 
-	h.removeNode(nodeRepr)
+	h.removeNode(nodeRepr) // 删除真实节点 从nodes中删除
 }
 
+// 从虚拟节点哈希键到真实节点的映射中删除真实节点
 func (h *ConsistentHash) removeRingNode(hash uint64, nodeRepr string) {
 	if nodes, ok := h.ring[hash]; ok {
+		// 处理哈希冲突，即不同真实节点映射了相同的虚拟节点哈希键
 		newNodes := nodes[:0]
 		for _, x := range nodes {
 			if repr(x) != nodeRepr {
@@ -160,8 +168,10 @@ func (h *ConsistentHash) removeRingNode(hash uint64, nodeRepr string) {
 			}
 		}
 		if len(newNodes) > 0 {
+			// 有哈希冲突，将其它真实节点保留
 			h.ring[hash] = newNodes
 		} else {
+			// 没有哈希冲突，删除虚拟节点
 			delete(h.ring, hash)
 		}
 	}

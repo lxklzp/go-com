@@ -5,9 +5,6 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/locales/en"
-	"github.com/go-playground/locales/zh"
-	ut "github.com/go-playground/universal-translator"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -24,21 +21,26 @@ const (
 )
 
 const (
-	Version                   = "v1.0.1"
-	DateTimeFormatter         = "2006-01-02 15:04:05"
-	DateTimeStandardFormatter = "2006-01-02T15:04:05"
-	DateFormatter             = "2006-01-02"
-	TimeFormatter             = "15:04:05"
-	MonthNumberFormatter      = "200601"
-	DateTimeNumberFormatter   = "20060102150405"
-	DateNumberFormatter       = "20060102"
+	Version                       = "v1.0.2"
+	DateTimeFormatter             = "2006-01-02 15:04:05"
+	DateTimeStandardFormatter     = "2006-01-02T15:04:05"
+	DateTimeStandardZoneFormatter = "2006-01-02T15:04:05+08:00"
+	DateFormatter                 = "2006-01-02"
+	TimeFormatter                 = "15:04:05"
+	MonthNumberFormatter          = "200601"
+	DateTimeNumberFormatter       = "20060102150405"
+	DateNumberFormatter           = "20060102"
 
-	TypeEnable  = 1
-	TypeDisable = 2
+	Sep = "?#"
 
-	Sep      = "?#"
+	AppApiPrefix = "/go-com/app/"
+	WebApiPrefix = "/go-com/web/"
+
 	MinFloat = float64(-9007199254740992) // -2^53
 	MaxFloat = float64(9007199254740992)  // 2^53
+
+	SortAsc  = 1 // 升序
+	SortDesc = 2 // 降序
 )
 
 const (
@@ -49,21 +51,9 @@ const (
 	TB
 )
 
-var DefaultTimeMin Timestamp
-var DefaultTimeMax Timestamp
-
-var Trans ut.Translator
-
 var BufPool *sync.Pool // bytes.Buffer 缓存池
 
 func InitDefine() {
-	tm, _ := time.ParseInLocation(DateTimeFormatter, "1980-01-01 00:00:00", time.Local)
-	DefaultTimeMin = Timestamp(tm)
-	tm, _ = time.ParseInLocation(DateTimeFormatter, "2034-01-01 00:00:00", time.Local)
-	DefaultTimeMax = Timestamp(tm)
-
-	Trans, _ = ut.New(en.New(), zh.New()).GetTranslator("zh")
-
 	BufPool = &sync.Pool{
 		New: func() interface{} {
 			return bytes.NewBuffer(make([]byte, 0, 4096))
@@ -125,7 +115,8 @@ type RouterApi struct {
 	Action func(c *gin.Context) interface{}
 }
 
-var RouterApiList []RouterApi
+var RouterAppApiList []RouterApi
+var RouterWebApiList []RouterApi
 
 func camelToSepName(field string, sep rune) string {
 	var buffer []rune
@@ -142,7 +133,7 @@ func camelToSepName(field string, sep rune) string {
 	return string(buffer)
 }
 
-func AddRouterApi(ctl interface{}, routerApiList *[]RouterApi) {
+func AddRouterApi(ctl interface{}, RouterAppApiList *[]RouterApi) {
 	ty := reflect.TypeOf(ctl)
 	value := reflect.ValueOf(ctl)
 	pathCtl := camelToSepName(ty.Name(), '-')
@@ -152,9 +143,9 @@ func AddRouterApi(ctl interface{}, routerApiList *[]RouterApi) {
 		methodName := ty.Method(i).Name
 		if strings.HasPrefix(methodName, "Action") {
 			pathAction := camelToSepName(strings.TrimPrefix(methodName, "Action"), '-')
-			routerApi.Path = C.App.Prefix + "/" + pathCtl + "/" + pathAction
+			routerApi.Path = pathCtl + "/" + pathAction
 			routerApi.Action = value.Method(i).Interface().(func(c *gin.Context) interface{})
-			*routerApiList = append(*routerApiList, routerApi)
+			*RouterAppApiList = append(*RouterAppApiList, routerApi)
 		}
 	}
 }
