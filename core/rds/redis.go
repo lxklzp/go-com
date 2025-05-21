@@ -14,6 +14,10 @@ type Config struct {
 	config.Redis
 }
 
+const (
+	ErrRedisExGetFail = "redis排他锁获取失败。"
+)
+
 func NewRedis(cfg Config) *redis.Client {
 	// 这是个redis连接池
 	rds := redis.NewClient(&redis.Options{
@@ -96,7 +100,7 @@ func LockExTry(r *redis.Client, ty string, token string, expire int, period time
 		}
 		if !ok {
 			if i >= maxTry {
-				return errors.New("redis排他锁获取失败。")
+				return errors.New(ErrRedisExGetFail)
 			}
 
 			time.Sleep(period)

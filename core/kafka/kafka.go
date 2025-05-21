@@ -145,7 +145,7 @@ func (kafka *Kafka) Produce(key []byte, data []byte, topic string) {
 				if ev.TopicPartition.Error != nil {
 					logr.L.Errorf("[kafka] 消息投递失败: %v\n", ev.TopicPartition)
 				} else {
-					logr.L.Infof("[kafka] 消息投递成功: %v\n", ev.TopicPartition)
+					logr.L.Debugf("[kafka] 消息投递成功: %v\n", ev.TopicPartition)
 				}
 			}
 		}

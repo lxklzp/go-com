@@ -15,6 +15,11 @@ func FormatFromTimeStandard(t string) string {
 	return strings.Replace(t, "T", " ", 1)[:19]
 }
 
+// FormatToTimeStandard 转换成标准时间格式
+func FormatToTimeStandard(datetime string) string {
+	return strings.Replace(datetime, " ", "T", 1) + "+08:00"
+}
+
 // GetTimeFromToPeriodExceptHoliday 获取两个时间段之间排除节假日的时间，单位秒
 func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holiday []string) (int, error) {
 	var err error

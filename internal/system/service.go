@@ -17,7 +17,6 @@ func RunApp() {
 
 	app.KafkaP.InitProducer(kafka.Config{Kafka: config.C.KafkaP})
 	kafkaC()
-	CronRun()
 
 	CronRun()
 }
