@@ -90,7 +90,7 @@ func (s *server) HeheAdd(ctx context.Context, param *proto.HeheReqData) (*proto.
 		return nil, errors.New("名称已存在")
 	}
 
-	m.CreateTime = config.Timestamp(time.Now())
+	m.CreateTime = tool.Timestamp(time.Now())
 	if err = app.Pg.Create(&m).Error; err != nil {
 		return nil, err
 	}

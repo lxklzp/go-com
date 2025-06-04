@@ -23,12 +23,12 @@ CREATE TABLE `holiday` (
 */
 
 type Holiday struct {
-	ID           int              `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
-	Year         string           `gorm:"column:year;comment:年份" json:"year"`                                        // 年份
-	Day          string           `gorm:"column:day;comment:日期" json:"day"`                                          // 日期
-	FestivalType int              `gorm:"column:festival_type;comment:0 不用该字段 1 节假日 2 工作日（调休）" json:"festival_type"` // 0 不用该字段 1 节假日 2 工作日（调休）
-	HolidayType  int              `gorm:"column:holiday_type;comment:1 节假调休 2 全年休息日（节假日+周末）" json:"holiday_type"`    // 1 节假调休 2 全年休息日（节假日+周末）
-	CreateTime   config.Timestamp `gorm:"column:create_time" json:"create_time"`
+	ID           int       `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	Year         string    `gorm:"column:year;comment:年份" json:"year"`                                        // 年份
+	Day          string    `gorm:"column:day;comment:日期" json:"day"`                                          // 日期
+	FestivalType int       `gorm:"column:festival_type;comment:0 不用该字段 1 节假日 2 工作日（调休）" json:"festival_type"` // 0 不用该字段 1 节假日 2 工作日（调休）
+	HolidayType  int       `gorm:"column:holiday_type;comment:1 节假调休 2 全年休息日（节假日+周末）" json:"holiday_type"`    // 1 节假调休 2 全年休息日（节假日+周末）
+	CreateTime   Timestamp `gorm:"column:create_time" json:"create_time"`
 }
 
 // 获取一年中，法定节假日和周末日期
@@ -72,7 +72,7 @@ func refreshHoliday(db *gorm.DB, year string, festival []string, workday []strin
 			Day:          d,
 			FestivalType: 1,
 			HolidayType:  1,
-			CreateTime:   config.Timestamp(now),
+			CreateTime:   Timestamp(now),
 		}
 		list = append(list, m)
 	}
@@ -82,7 +82,7 @@ func refreshHoliday(db *gorm.DB, year string, festival []string, workday []strin
 			Day:          d,
 			FestivalType: 2,
 			HolidayType:  1,
-			CreateTime:   config.Timestamp(now),
+			CreateTime:   Timestamp(now),
 		}
 		list = append(list, m)
 	}
@@ -97,7 +97,7 @@ func refreshHoliday(db *gorm.DB, year string, festival []string, workday []strin
 			Day:          d,
 			FestivalType: 0,
 			HolidayType:  2,
-			CreateTime:   config.Timestamp(now),
+			CreateTime:   Timestamp(now),
 		}
 		list = append(list, m)
 	}

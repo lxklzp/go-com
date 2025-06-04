@@ -1,0 +1,14 @@
+Src:
+  Cfg:
+    db_app_name: Pg
+  Table:
+    - bz_sap_cost_center
+    - bz_sap_profits_center
+  Where:
+  PageSize: 5000
+  Schema: hana_app
+Dst:
+  Cfg:
+    db_app_name: Mysql
+  PageSize: 5000
+  EndSql:

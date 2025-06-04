@@ -7,6 +7,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"go-com/config"
 	"go-com/core/logr"
+	"go-com/core/tool"
 	"gorm.io/gorm"
 	"math"
 	"net/http"
@@ -112,8 +113,8 @@ func IsZero(value interface{}) bool {
 		if len(value.([]int)) == 0 {
 			return true
 		}
-	case config.Timestamp:
-		if time.Time(value.(config.Timestamp)).IsZero() {
+	case tool.Timestamp:
+		if time.Time(value.(tool.Timestamp)).IsZero() {
 			return true
 		}
 	}

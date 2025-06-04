@@ -126,8 +126,8 @@ func (ctl listExport) ActionDigitalLifeIndexListExport(c *gin.Context) interface
 					mMap, _ := tool.StructToMap(item, "json")
 					for _, k := range param.ExportField {
 						switch mMap[k].(type) {
-						case config.Timestamp:
-							mMap[k] = time.Time(mMap[k].(config.Timestamp)).Format(config.DateTimeFormatter)
+						case tool.Timestamp:
+							mMap[k] = time.Time(mMap[k].(tool.Timestamp)).Format(config.DateTimeFormatter)
 						}
 						row = append(row, mMap[k])
 					}

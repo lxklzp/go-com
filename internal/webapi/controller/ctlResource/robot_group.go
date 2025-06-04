@@ -44,7 +44,7 @@ func (ctl robotGroup) ActionAdd(c *gin.Context) interface{} {
 		return tool.RespData(400, "名称已存在。", nil)
 	}
 
-	param.CreateTime = config.Timestamp(time.Now())
+	param.CreateTime = tool.Timestamp(time.Now())
 	if err = app.Db.Create(&param.RobotGroup).Error; err != nil {
 		return tool.RespData(500, err.Error(), nil)
 	}

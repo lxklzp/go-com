@@ -2,7 +2,6 @@ package resource
 
 import (
 	"github.com/pkg/errors"
-	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/tool"
 	"go-com/internal/app"
@@ -34,7 +33,7 @@ func (handler *downloadHandler) Before(title string, userId int) (int, error) {
 		return 0, errors.New("下载任务已满，请稍后重试。")
 	}
 
-	now := config.Timestamp(time.Now())
+	now := tool.Timestamp(time.Now())
 	m := model.Download{
 		Name:       title,
 		Path:       "",
@@ -49,7 +48,7 @@ func (handler *downloadHandler) Before(title string, userId int) (int, error) {
 
 func (handler *downloadHandler) After(id int, path string, err error) {
 	tool.AtomicDecr(handler.downloadLimitLock, 1, 0)
-	now := config.Timestamp(time.Now())
+	now := tool.Timestamp(time.Now())
 	if err != nil {
 		logr.L.Error(err)
 		app.Db.Where("id=?", id).Updates(model.Download{Status: DownloadStatusFail, EndTime: now})

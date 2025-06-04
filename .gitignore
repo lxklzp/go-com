@@ -2,10 +2,4 @@
 
 /runtime/*
 
-/html/*
-
 /dao
-
-/data/*
-
-create_db_table.go
