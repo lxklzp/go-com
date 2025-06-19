@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/go-redis/redis/v8"
+	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/redis/go-redis/v9"
 	"github.com/robfig/cron/v3"
 	nebula "github.com/vesoft-inc/nebula-go/v3"
 	"go-com/core/kafka"

@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"context"
-	queue "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	queue "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go-com/config"

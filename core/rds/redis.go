@@ -2,8 +2,8 @@ package rds
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	"go-com/config"
 	"go-com/core/logr"
 	"strconv"
