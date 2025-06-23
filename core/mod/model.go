@@ -25,8 +25,8 @@ const AllNumber = -1000
 type Base struct {
 	TimeFrom     string        `gorm:"-" json:"time_from"`
 	TimeTo       string        `gorm:"-" json:"time_to"`
-	Page         int           `gorm:"-" json:"pageNo"`
-	PageSize     int           `gorm:"-" json:"pageSize"`
+	Page         int           `gorm:"-" json:"page"`
+	PageSize     int           `gorm:"-" json:"page_size"`
 	ExportTitle  string        `gorm:"-" json:"export_title"`
 	ExportHeader []interface{} `gorm:"-" json:"export_header"`
 	ExportField  []string      `gorm:"-" json:"export_field"`
