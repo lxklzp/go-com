@@ -2,7 +2,7 @@ package cache
 
 import (
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v7"
 	"go-com/config"
 	"go-com/core/es"
 	"go-com/core/logr"
