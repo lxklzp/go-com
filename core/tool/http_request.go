@@ -10,11 +10,16 @@ import (
 	"time"
 )
 
+var httpClient *http.Client
+
+func init() {
+	httpClient = &http.Client{}
+}
+
 func httpReqResp(req *http.Request, url string, param interface{}) ([]byte, error) {
 	// 请求
-	client := &http.Client{}
-	client.Timeout = time.Minute
-	resp, err := client.Do(req)
+	httpClient.Timeout = time.Minute
+	resp, err := httpClient.Do(req)
 	if resp != nil {
 		defer resp.Body.Close()
 	}

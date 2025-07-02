@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+<img id="capt" src="" /><br/>
+<script>
+
+    var curCaptKey = "";
+    //得到图形验证码和id
+    $.ajax({
+        type: "POST",
+        url: "/api/auth-app-dev/captcha-image",
+        data: JSON.stringify({}),
+        dataType: "JSON",
+        contentType: "application/json",
+        success: function(result) {
+            curCaptKey = result.data.key;
+            document.getElementById("capt").src=result.data.image_base64;
+        }
+    });
+</script>
+</body>
+</html>

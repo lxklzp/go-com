@@ -1,0 +1,9 @@
+FROM ubuntu:latest
+
+ENV TZ=Asia/Shanghai
+
+COPY go-com/ /app/go-com/
+
+WORKDIR /app/go-com
+
+CMD ["/app/go-com/main_web","-id=1","-config=/app/go-com/config/config.yaml"]

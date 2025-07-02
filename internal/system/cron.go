@@ -6,6 +6,7 @@ import (
 	"go-com/config"
 	"go-com/core/logr"
 	"go-com/core/mod"
+	"go-com/core/rds"
 	"go-com/core/tool"
 	"go-com/internal/app"
 	"go-com/internal/model"
@@ -20,7 +21,19 @@ func CronRun() {
 	var err error
 	// 清除过期的数据
 	_, err = app.Cron.AddFunc("0 1 * * *", func() {
-		logr.L.Debug("开始清除过期数据...")
+		logr.L.Debug("开始清除过期的数据...")
+		if err := rds.LockExTry(app.Redis, "CronClearHistory", "CronClearHistory", 10, 0); err != nil {
+			if err.Error() != rds.ErrRedisExGetFail {
+				logr.L.Error(err.Error())
+			}
+			return
+		}
+		defer func() {
+			if _, err := rds.UnLockEx(app.Redis, "CronClearHistory", "CronClearHistory"); err != nil {
+				logr.L.Error(err.Error())
+			}
+		}()
+
 		CronClearHistory()
 		logr.L.Debug("完成清除过期数据")
 	})

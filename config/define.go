@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	Version                       = "v1.0.2"
+	Version                       = "v1.0.0"
 	DateTimeFormatter             = "2006-01-02 15:04:05"
 	DateTimeStandardFormatter     = "2006-01-02T15:04:05"
 	DateTimeStandardZoneFormatter = "2006-01-02T15:04:05+08:00"

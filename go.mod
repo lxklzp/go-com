@@ -9,8 +9,10 @@ require (
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.10.1
 	github.com/godoes/gorm-oracle v1.6.16
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
+	github.com/mojocn/base64Captcha v1.3.8
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -21,6 +23,8 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/spf13/viper v1.20.1
 	github.com/vesoft-inc/nebula-go/v3 v3.8.0
+	github.com/wenlng/go-captcha-assets v1.0.7
+	github.com/wenlng/go-captcha/v2 v2.0.4
 	github.com/xuri/excelize/v2 v2.9.1
 	go.etcd.io/etcd/api/v3 v3.6.1
 	go.etcd.io/etcd/client/pkg/v3 v3.6.1
@@ -107,6 +111,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.16.0 // indirect
+	golang.org/x/image v0.25.0 // indirect
 	golang.org/x/mod v0.25.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
