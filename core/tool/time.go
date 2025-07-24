@@ -20,8 +20,8 @@ func FormatToTimeStandard(datetime string) string {
 	return strings.Replace(datetime, " ", "T", 1) + "+08:00"
 }
 
-// GetTimeFromToPeriodExceptHoliday 获取两个时间段之间排除节假日的时间，单位秒
-func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holiday []string) (int, error) {
+// GetTimeFromToPeriodExceptHoliday 获取两个时间段之间排除节假日的时间，ty=1 单位秒，ty=2 单位天
+func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holiday []string, ty int) (int, error) {
 	var err error
 	var timeFrom, timeTo, dateFrom, dateTo, dateStep time.Time
 
@@ -36,37 +36,74 @@ func GetTimeFromToPeriodExceptHoliday(timeFromStr string, timeToStr string, holi
 		return 0, errors.New("开始时间在结束时间之后")
 	}
 
-	// 开始、结束时间是同一天
-	if timeFromStr[:10] == timeToStr[:10] {
-		if SliceHas(holiday, timeFromStr[:10]) {
-			return 0, nil
-		} else {
-			return int(timeTo.Sub(timeFrom) / time.Second), nil
+	switch ty {
+	case 1:
+		// 开始、结束时间是同一天
+		if timeFromStr[:10] == timeToStr[:10] {
+			if SliceHas(holiday, timeFromStr[:10]) {
+				return 0, nil
+			} else {
+				return int(timeTo.Sub(timeFrom) / time.Second), nil
+			}
 		}
-	}
 
-	// 开始、结束时间不是同一天
-	var period int
-	dateFrom, _ = time.ParseInLocation(config.DateFormatter, timeFromStr[:10], time.Local)
-	dateTo, _ = time.ParseInLocation(config.DateFormatter, timeToStr[:10], time.Local)
+		// 开始、结束时间不是同一天
+		var period int
+		dateFrom, _ = time.ParseInLocation(config.DateFormatter, timeFromStr[:10], time.Local)
+		dateTo, _ = time.ParseInLocation(config.DateFormatter, timeToStr[:10], time.Local)
 
-	// 开始当天
-	if !SliceHas(holiday, timeFromStr[:10]) {
-		period += int(dateFrom.AddDate(0, 0, 1).Sub(timeFrom) / time.Second)
-	}
-	// 中间日期
-	dateStep = dateFrom.AddDate(0, 0, 1)
-	for dateStep.Before(dateTo) {
-		if !SliceHas(holiday, dateStep.Format(config.DateFormatter)) {
-			period += 3600 * 24
+		// 开始当天
+		if !SliceHas(holiday, timeFromStr[:10]) {
+			period += int(dateFrom.AddDate(0, 0, 1).Sub(timeFrom) / time.Second)
 		}
-		dateStep = dateStep.AddDate(0, 0, 1)
+		// 中间日期
+		dateStep = dateFrom.AddDate(0, 0, 1)
+		for dateStep.Before(dateTo) {
+			if !SliceHas(holiday, dateStep.Format(config.DateFormatter)) {
+				period += 3600 * 24
+			}
+			dateStep = dateStep.AddDate(0, 0, 1)
+		}
+		// 结束当天
+		if !SliceHas(holiday, timeToStr[:10]) {
+			period += int(timeTo.Sub(dateTo) / time.Second)
+		}
+		return period, nil
+	case 2:
+		// 开始、结束时间是同一天
+		if timeFromStr[:10] == timeToStr[:10] {
+			if SliceHas(holiday, timeFromStr[:10]) {
+				return 0, nil
+			} else {
+				return 1, nil
+			}
+		}
+
+		// 开始、结束时间不是同一天
+		var period int
+		dateFrom, _ = time.ParseInLocation(config.DateFormatter, timeFromStr[:10], time.Local)
+		dateTo, _ = time.ParseInLocation(config.DateFormatter, timeToStr[:10], time.Local)
+
+		// 开始当天
+		if !SliceHas(holiday, timeFromStr[:10]) {
+			period += 1
+		}
+		// 中间日期
+		dateStep = dateFrom.AddDate(0, 0, 1)
+		for dateStep.Before(dateTo) {
+			if !SliceHas(holiday, dateStep.Format(config.DateFormatter)) {
+				period += 1
+			}
+			dateStep = dateStep.AddDate(0, 0, 1)
+		}
+		// 结束当天
+		if !SliceHas(holiday, timeToStr[:10]) {
+			period += 1
+		}
+		return period, nil
+	default:
+		return 0, errors.New("不支持的ty。")
 	}
-	// 结束当天
-	if !SliceHas(holiday, timeToStr[:10]) {
-		period += int(timeTo.Sub(dateTo) / time.Second)
-	}
-	return period, nil
 }
 
 // TimeFromToSeconds 获取两个时间段之间的时间，单位秒

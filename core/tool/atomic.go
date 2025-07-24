@@ -8,7 +8,7 @@ import (
 func AtomicIncr(count *atomic.Int64, step int64, countMax int64) bool {
 	for {
 		countNow := count.Load()
-		if countNow == countMax {
+		if countNow >= countMax {
 			return false
 		}
 		if count.CompareAndSwap(countNow, countNow+step) {
@@ -21,7 +21,7 @@ func AtomicIncr(count *atomic.Int64, step int64, countMax int64) bool {
 func AtomicDecr(count *atomic.Int64, step int64, countMin int64) bool {
 	for {
 		countNow := count.Load()
-		if countNow == countMin {
+		if countNow <= countMin {
 			return false
 		}
 		if count.CompareAndSwap(countNow, countNow-step) {
