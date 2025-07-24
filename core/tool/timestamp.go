@@ -17,7 +17,7 @@ func (t *Timestamp) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	str := string(data)
-	timeStr := strings.Trim(str, "\"")
+	timeStr := FormatFromTimeStandard(strings.Trim(str, "\""))
 	tm, err := time.ParseInLocation(config.DateTimeFormatter, timeStr, time.Local)
 	*t = Timestamp(tm)
 	return err

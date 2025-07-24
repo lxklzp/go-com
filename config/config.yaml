@@ -61,9 +61,22 @@ Pg:
     MaxIdleConns: 10
 
 Redis:
-  Addr: 192.168.2.70:6379
-  Password: mypass
+  Addr: 192.168.2.22:6380
+  Username:
+  Password: redis_pwd
   Db: 0
+  ClientName:
+  PoolSize: 10
+  #  1 单机 2 哨兵
+  Type: 2
+  # 哨兵配置
+  MasterName: mymaster
+  SentinelAddrs:
+    - 192.168.2.39:26379
+    - 192.168.2.39:26380
+    - 192.168.2.39:26381
+  SentinelUsername:
+  SentinelPassword:
 
 KafkaP:
   Servers: 192.168.2.22:9092

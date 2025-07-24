@@ -93,9 +93,19 @@ type Postgresql struct {
 }
 
 type Redis struct {
-	Addr     string
-	Password string
-	Db       int
+	Addr       string
+	Username   string
+	Password   string
+	Db         int
+	ClientName string
+	PoolSize   int
+
+	Type int // 1 单机 2 哨兵
+
+	MasterName       string
+	SentinelAddrs    []string
+	SentinelUsername string
+	SentinelPassword string
 }
 
 type Kafka struct {

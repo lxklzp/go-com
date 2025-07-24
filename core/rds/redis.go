@@ -16,16 +16,41 @@ type Config struct {
 
 const (
 	ErrRedisExGetFail = "redis排他锁获取失败。"
+
+	ConnectionTypeSingle   = 1
+	ConnectionTypeSentinel = 2
 )
 
 func NewRedis(cfg Config) *redis.Client {
+	var rds *redis.Client
 	// 这是个redis连接池
-	rds := redis.NewClient(&redis.Options{
-		Addr:     cfg.Addr,
-		Password: cfg.Password,
-		DB:       cfg.Db,
-		PoolSize: 10,
-	})
+	switch cfg.Type {
+	case ConnectionTypeSingle:
+		rds = redis.NewClient(&redis.Options{
+			Addr:       cfg.Addr,
+			Username:   cfg.Username,
+			Password:   cfg.Password,
+			DB:         cfg.Db,
+			ClientName: cfg.ClientName,
+			PoolSize:   cfg.PoolSize,
+		})
+	case ConnectionTypeSentinel:
+		rds = redis.NewFailoverClient(&redis.FailoverOptions{
+			Username:   cfg.Username,
+			Password:   cfg.Password,
+			DB:         cfg.Db,
+			ClientName: cfg.ClientName,
+			PoolSize:   cfg.PoolSize,
+
+			MasterName:       cfg.MasterName,
+			SentinelAddrs:    cfg.SentinelAddrs,
+			SentinelUsername: cfg.SentinelUsername,
+			SentinelPassword: cfg.SentinelPassword,
+		})
+	default:
+		logr.L.Fatal("不支持的redis连接方式。")
+	}
+
 	if _, err := rds.Ping(context.TODO()).Result(); err != nil {
 		logr.L.Fatal(err)
 	}
