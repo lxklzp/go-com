@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -192,9 +193,9 @@ type Ftp struct {
 	Password string
 }
 
-// 将配置参数格式化为内存数据结构
-func decode() {
-	InitDefine()
+// 完善配置项
+func complete() {
+	initDefine() // 全局初始化
 
 	if C.App.RuntimePath == "" {
 		RuntimePath = Root + "runtime"
@@ -206,14 +207,17 @@ func decode() {
 	C.App.MaxMultipartMemory *= MB
 }
 
-// Load 加载配置文件
+// Load 初始化配置
 func Load() {
-	// 通过启动指令配置
+	/***** 通过启动指令配置 *****/
+
 	var id int64
 	var configFile string
-	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径") // -config=/data/go-com/config/config.yaml
+	flag.StringVar(&configFile, "config", "", "配置文件config.yaml的全路径") // -config=/data/auth-fast/config/config.yaml
 	flag.Int64Var(&id, "id", 0, "在当前服务下的唯一编号，每启动一个服务程序都要配置，最大99")
 	flag.Parse()
+
+	/***** 通过config.yaml配置文件加载配置项 *****/
 
 	v := viper.New()
 	configPath := Root + "config"
@@ -229,23 +233,31 @@ func Load() {
 		log.Fatal(err)
 	}
 
-	decode()
+	/***** 多种途径加载系统id，并验证 *****/
 
 	if id > 0 {
 		C.App.Id = id
 	}
 
-	// 从环境变量获取
-	idEnv := os.Getenv("GO_COM_ID")
+	// 从环境变量中获取，用于k8s的StatefulSet方式，可从pod名称（xx-0、xx-1）中提取ID
+	idEnv := os.Getenv("AUTH_FAST_ID")
 	if idEnv != "" {
-		id, _ := strconv.Atoi(idEnv)
-		if id > 0 {
-			C.App.Id = int64(id)
+		reg, _ := regexp.Compile(`\d+`)
+		idString := reg.FindString(idEnv)
+		if idString == "" {
+			log.Fatal("环境变量的ID有误。")
+		} else {
+			id, _ := strconv.Atoi(idString)
+			C.App.Id = int64(id + 1)
 		}
 	}
 
 	// 验证id
 	if C.App.Id > 99 || C.App.Id < 1 {
-		log.Fatal("唯一编号值在1和99之间。")
+		log.Fatal("id值在1和99之间。")
 	}
+
+	/***** 完善配置项 *****/
+
+	complete()
 }

@@ -8,7 +8,20 @@ import (
 	"strings"
 )
 
-// 图形验证码，有效期5分钟
+/**
+图形验证码，有效期5分钟
+
+使用方式：
+
+// 初始化
+captcha.InitImage()
+
+// 生成前端需要的数据
+captcha.Image.Generate()
+// 验证前端提交的数据
+captcha.Image.Verify()
+
+*/
 
 var Image image
 

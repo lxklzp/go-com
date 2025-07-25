@@ -19,7 +19,20 @@ import (
 	"strings"
 )
 
-// 行为验证码，有效期5分钟
+/**
+行为验证码，有效期5分钟
+
+使用方式：
+
+// 初始化
+captcha.InitBehavior()
+
+// 生成前端需要的数据
+captcha.Behavior.Generate()
+// 验证前端提交的数据
+captcha.Behavior.Verify()
+
+*/
 
 var Behavior behavior
 
@@ -138,7 +151,7 @@ func (c *behavior) Verify(key string, dots string) bool {
 		sx, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[j]), 64)
 		sy, _ := strconv.ParseFloat(fmt.Sprintf("%v", src[k]), 64)
 
-		if !click.CheckPoint(int64(sx), int64(sy), int64(dot.X), int64(dot.Y), int64(dot.Width), int64(dot.Height), 0) {
+		if !click.Validate(int(sx), int(sy), dot.X, dot.Y, dot.Width, dot.Height, 0) {
 			return false
 		}
 	}

@@ -45,9 +45,10 @@ const (
 	TB
 )
 
-var BufPool *sync.Pool // bytes.Buffer 缓存池
+var BufPool *sync.Pool // bytes.Buffer 缓存池，供全局使用
 
-func InitDefine() {
+// 全局初始化
+func initDefine() {
 	BufPool = &sync.Pool{
 		New: func() interface{} {
 			return bytes.NewBuffer(make([]byte, 0, 4096))
@@ -55,13 +56,16 @@ func InitDefine() {
 	}
 }
 
+/********** POST路由收集，用于gin自动注册 **********/
+
+// RouterApi POST路由单元
 type RouterApi struct {
-	Path   string
-	Action func(c *gin.Context) interface{}
+	Path   string                           // 请求路径
+	Action func(c *gin.Context) interface{} // 请求处理方法
 }
 
-var RouterAppApiList []RouterApi
-var RouterWebApiList []RouterApi
+var RouterAppApiList []RouterApi // POST路由单元集合，用于gin自动注册
+var RouterWebApiList []RouterApi // POST路由单元集合，用于gin自动注册
 
 func camelToSepName(field string, sep rune) string {
 	var buffer []rune
@@ -78,17 +82,18 @@ func camelToSepName(field string, sep rune) string {
 	return string(buffer)
 }
 
+// AddRouterApi 利用反射解析controller的Action类方法，收集到POST路由单元集合，用于gin自动注册
 func AddRouterApi(ctl interface{}, RouterAppApiList *[]RouterApi) {
 	ty := reflect.TypeOf(ctl)
 	value := reflect.ValueOf(ctl)
-	pathCtl := camelToSepName(ty.Name(), '-')
+	pathCtl := camelToSepName(ty.Name(), '-') + "/"
 	numMethod := ty.NumMethod()
 	for i := 0; i < numMethod; i++ {
 		var routerApi RouterApi
 		methodName := ty.Method(i).Name
 		if strings.HasPrefix(methodName, "Action") {
 			pathAction := camelToSepName(strings.TrimPrefix(methodName, "Action"), '-')
-			routerApi.Path = pathCtl + "/" + pathAction
+			routerApi.Path = pathCtl + pathAction
 			routerApi.Action = value.Method(i).Interface().(func(c *gin.Context) interface{})
 			*RouterAppApiList = append(*RouterAppApiList, routerApi)
 		}
