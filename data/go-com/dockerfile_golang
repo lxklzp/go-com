@@ -1,0 +1,17 @@
+FROM ubuntu:latest
+
+COPY go1.24.3.linux-amd64.tar.gz /app/go1.24.3.linux-amd64.tar.gz
+
+RUN apt-get update && apt-get install -y git && \
+    cd app && tar -zxvf go1.24.3.linux-amd64.tar.gz && rm -rf go1.24.3.linux-amd64.tar.gz && mv go/ /usr/local/
+
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/root/go
+ENV PATH=$PATH:$GOROOT/bin
+ENV PATH=$PATH:$GOPATH/bin
+ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.cn
+
+WORKDIR /app
+
+CMD ["go","version"]
