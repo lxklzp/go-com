@@ -1,21 +1,14 @@
-package main
+package dp
 
-import (
-	"errors"
-	"fmt"
-	errors2 "github.com/pkg/errors"
-)
+import "fmt"
+
+// 装饰器 这是一个后进先执行的方法栈，形成一条处理链。
 
 func main() {
-	fmt.Printf("%+v", errors2.WithStack(bbb()))
-}
-
-func aaa() error {
-	return errors.New("aaa")
-}
-
-func bbb() error {
-	return aaa()
+	c := chain{wrapperList: []wrapper{a(), b(), c()}}
+	c.run(func() {
+		fmt.Println("hello world")
+	})
 }
 
 type run func()

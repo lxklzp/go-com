@@ -16,10 +16,14 @@ const (
 	refKey                  = `"$ref"`
 	OpenapiVersion          = "3.0.3"
 	MaxSchemaDeep           = 4 // schema最大引用深度
+	SecurityBearer          = `,"components":{"securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer","bearerFormat":"token"}}},"security":[{"bearerAuth":[]}]}`
 )
 
 // ComponentsSchemasRefToInline 将ComponentsSchemas的引用转换成内联模式
 func (handler openapiHandler) ComponentsSchemasRefToInline(components *openapi3.Components) error {
+	if components == nil {
+		return nil
+	}
 	for i := 0; i < MaxSchemaDeep; i++ {
 		if err := handler.componentsSchemasRefToInlineOnce(components); err != nil {
 			return err
@@ -118,6 +122,10 @@ func (handler openapiHandler) checkSchemaDeep(schemaRef *openapi3.SchemaRef, com
 
 // PathsSchemaRefToInline 将PathsSchema的引用转换成内联模式
 func (handler openapiHandler) PathsSchemaRefToInline(paths *openapi3.Paths, components *openapi3.Components) {
+	if paths == nil || components == nil {
+		return
+	}
+
 	for _, path := range paths.Map() {
 		handler.operationToInlineOnce(path.Get, components)
 		handler.operationToInlineOnce(path.Post, components)
